@@ -1,10 +1,10 @@
-# 🛍️ StyleBay - Uganda's Fashion Marketplace
+# 🇺🇬 ONLINE-SHOP-UGANDA - Uganda's Fashion Marketplace
 
-![StyleBay Banner](https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=400&fit=crop)
+![African Women Sewing](https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=1200&h=400&fit=crop)
 
 > **Buy and sell clothes, shoes, and accessories in Uganda!**
 
-StyleBay is a modern online fashion marketplace designed specifically for Uganda. Inspired by platforms like Jumia, it allows anyone to list and sell their fashion items, from dresses to shoes to traditional wear.
+ONLINE-SHOP-UGANDA is a modern online fashion marketplace designed specifically for Uganda. Inspired by platforms like Jumia, it allows anyone to list and sell their fashion items, from dresses to shoes to traditional wear.
 
 ---
 
