@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![African Woman Sewing Clothes](https://images.unsplash.com/photo-1559551409-dadc959f76b8?w=800&h=400&fit=crop)
+<img src="https://images.pexels.com/photos/3738088/pexels-photo-3738088.jpeg?auto=compress&cs=tinysrgb&w=800&h=400&fit=crop" alt="African Woman Sewing on Machine" width="800"/>
 
 ### 👗 **Handcrafted Fashion Made in Uganda** 🧵
 
