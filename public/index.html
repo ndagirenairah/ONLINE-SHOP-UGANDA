@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StyleBay - Uganda's #1 Fashion Marketplace</title>
+    <meta name="description" content="Buy and sell fashion items in Uganda. Post clothes, shoes, accessories and more on StyleBay.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Loader -->
+    <div id="loader" class="loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <p>Loading StyleBay...</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <!-- Logo -->
+                <a href="/" class="logo" onclick="navigateTo('home'); return false;">
+                    <div class="logo-icon-wrapper">
+                        <svg class="logo-svg" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Shopping Bag -->
+                            <path d="M10 15 L10 42 C10 44 12 46 14 46 L36 46 C38 46 40 44 40 42 L40 15 Z" fill="url(#bagGradient)" stroke="#ff6b35" stroke-width="2"/>
+                            <!-- Bag Handle -->
+                            <path d="M17 15 L17 10 C17 6 21 4 25 4 C29 4 33 6 33 10 L33 15" fill="none" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+                            <!-- Hanger inside -->
+                            <path d="M25 20 L25 24" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M19 28 L25 24 L31 28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <!-- Dress silhouette -->
+                            <path d="M22 28 L20 38 L30 38 L28 28" fill="rgba(255,255,255,0.3)" stroke="#fff" stroke-width="1.5"/>
+                            <!-- Sparkle -->
+                            <circle cx="35" cy="12" r="2" fill="#ffd700"/>
+                            <path d="M35 8 L35 10 M35 14 L35 16 M31 12 L33 12 M37 12 L39 12" stroke="#ffd700" stroke-width="1" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="bagGradient" x1="10" y1="15" x2="40" y2="46" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#ff8c5a"/>
+                                    <stop offset="100%" stop-color="#ff6b35"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <span class="logo-text">Style<span class="logo-highlight">Bay</span></span>
+                </a>
+
+                <!-- Search Bar -->
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search for clothes, shoes, accessories...">
+                    <button type="button" onclick="performSearch()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                <!-- Nav Actions -->
+                <div class="nav-actions">
+                    <button class="btn-icon" onclick="navigateTo('home')" title="Home">
+                        <i class="fas fa-home"></i>
+                    </button>
+                    <button class="btn-icon" onclick="navigateTo('categories')" title="Categories">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button class="btn-icon btn-favorites" onclick="viewFavorites()" title="My Favorites">
+                        <i class="fas fa-heart"></i>
+                        <span class="favorites-count">0</span>
+                    </button>
+                    <button class="btn-sell" onclick="checkAuthAndPost()">
+                        <i class="fas fa-plus"></i>
+                        <span>Sell Item</span>
+                    </button>
+                    <div class="user-menu" id="userMenu">
+                        <button class="btn-icon" onclick="toggleUserDropdown()">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        <div class="user-dropdown" id="userDropdown">
+                            <!-- Content changes based on auth state -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-search">
+                <input type="text" id="mobileSearchInput" placeholder="Search...">
+                <button onclick="performSearch(true)"><i class="fas fa-search"></i></button>
+            </div>
+            <nav class="mobile-nav">
+                <a href="#" onclick="navigateTo('home'); closeMobileMenu(); return false;">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="#" onclick="navigateTo('categories'); closeMobileMenu(); return false;">
+                    <i class="fas fa-th-large"></i> Categories
+                </a>
+                <a href="#" onclick="viewFavorites(); closeMobileMenu(); return false;" class="mobile-favorites-link">
+                    <i class="fas fa-heart"></i> My Favorites
+                    <span class="favorites-count mobile">0</span>
+                </a>
+                <a href="#" onclick="checkAuthAndPost(); closeMobileMenu(); return false;">
+                    <i class="fas fa-plus-circle"></i> Sell Item
+                </a>
+                <a href="#" onclick="navigateTo('my-listings'); closeMobileMenu(); return false;" id="mobileMyListings" style="display: none;">
+                    <i class="fas fa-store"></i> My Listings
+                </a>
+                <div class="mobile-auth" id="mobileAuth">
+                    <!-- Auth buttons here -->
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="mainContent">
+        <!-- Content loaded dynamically -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3 class="footer-logo">
+                        <svg class="footer-logo-svg" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 15 L10 42 C10 44 12 46 14 46 L36 46 C38 46 40 44 40 42 L40 15 Z" fill="#ff6b35"/>
+                            <path d="M17 15 L17 10 C17 6 21 4 25 4 C29 4 33 6 33 10 L33 15" fill="none" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+                            <path d="M25 20 L25 24 M19 28 L25 24 L31 28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        StyleBay
+                    </h3>
+                    <p>Uganda's #1 Fashion Marketplace. Buy and sell clothes, shoes, and accessories with ease.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <a href="#" onclick="navigateTo('home'); return false;">Home</a>
+                    <a href="#" onclick="navigateTo('categories'); return false;">Categories</a>
+                    <a href="#" onclick="navigateTo('about'); return false;">About Us</a>
+                    <a href="#" onclick="navigateTo('contact'); return false;">Contact</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Categories</h4>
+                    <a href="#" onclick="filterByCategory('dresses'); return false;">Dresses</a>
+                    <a href="#" onclick="filterByCategory('shoes'); return false;">Shoes</a>
+                    <a href="#" onclick="filterByCategory('shirts'); return false;">Shirts & Tops</a>
+                    <a href="#" onclick="filterByCategory('accessories'); return false;">Accessories</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Us</h4>
+                    <p><i class="fas fa-map-marker-alt"></i> Kampala, Uganda</p>
+                    <p><i class="fas fa-phone"></i> +256 700 518 006</p>
+                    <p><i class="fab fa-whatsapp"></i> +256 700 518 006</p>
+                    <p><i class="fas fa-envelope"></i> info@stylebay.ug</p>
+                    <a href="https://wa.me/256700518006?text=Hi StyleBay! I have a question..." 
+                       target="_blank" class="footer-whatsapp-btn">
+                        <i class="fab fa-whatsapp"></i> Chat with us
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 StyleBay. All rights reserved. | Made with ❤️ in Uganda</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div class="modal" id="authModal">
+        <div class="modal-overlay" onclick="closeModal('authModal')"></div>
+        <div class="modal-content auth-modal">
+            <button class="modal-close" onclick="closeModal('authModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <h2>Welcome Back!</h2>
+                <p>Login to your StyleBay account</p>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" name="email" required placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" name="password" required placeholder="••••••••">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                
+                <p class="auth-switch">
+                    Don't have an account? <a href="#" onclick="switchAuthTab('register'); return false;">Register</a>
+                </p>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
+                <h2>Join StyleBay!</h2>
+                <p>Create your seller account</p>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Full Name *</label>
+                    <input type="text" name="fullName" required placeholder="John Doe">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email *</label>
+                    <input type="email" name="email" required placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password *</label>
+                    <input type="password" name="password" required placeholder="Min 6 characters" minlength="6">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-phone"></i> Phone *</label>
+                        <input type="tel" name="phone" required placeholder="+256 700 000 000">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fab fa-whatsapp"></i> WhatsApp</label>
+                        <input type="tel" name="whatsapp" placeholder="+256 700 000 000">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt"></i> Location</label>
+                    <select name="location">
+                        <option value="Kampala">Kampala</option>
+                        <option value="Entebbe">Entebbe</option>
+                        <option value="Jinja">Jinja</option>
+                        <option value="Mbarara">Mbarara</option>
+                        <option value="Gulu">Gulu</option>
+                        <option value="Mbale">Mbale</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+                
+                <p class="auth-switch">
+                    Already have an account? <a href="#" onclick="switchAuthTab('login'); return false;">Login</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Post Item Modal -->
+    <div class="modal" id="postItemModal">
+        <div class="modal-overlay" onclick="closeModal('postItemModal')"></div>
+        <div class="modal-content post-modal">
+            <button class="modal-close" onclick="closeModal('postItemModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <h2><i class="fas fa-camera"></i> Post Your Item</h2>
+            <p>Fill in the details to list your item for sale</p>
+            
+            <form id="postItemForm" onsubmit="handlePostItem(event)">
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label><i class="fas fa-images"></i> Photos (Max 5) *</label>
+                    <div class="image-upload-area" onclick="document.getElementById('productImages').click()">
+                        <input type="file" id="productImages" name="images" multiple accept="image/*" onchange="previewImages(event)" style="display: none;">
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click to upload photos</p>
+                            <span>JPG, PNG, GIF up to 5MB each</span>
+                        </div>
+                        <div class="image-previews" id="imagePreviews"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-tag"></i> Item Name *</label>
+                    <input type="text" name="name" required placeholder="e.g., Red Dinner Dress">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-folder"></i> Category *</label>
+                        <select name="category" required>
+                            <option value="">Select Category</option>
+                            <option value="dresses">Dresses</option>
+                            <option value="shirts">Shirts & Tops</option>
+                            <option value="pants">Pants & Jeans</option>
+                            <option value="shoes">Shoes</option>
+                            <option value="jackets">Jackets & Coats</option>
+                            <option value="accessories">Accessories</option>
+                            <option value="traditional">Traditional Wear</option>
+                            <option value="sportswear">Sportswear</option>
+                            <option value="kids">Kids Fashion</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-ruler"></i> Size</label>
+                        <select name="size">
+                            <option value="XS">XS</option>
+                            <option value="S">S</option>
+                            <option value="M" selected>M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                            <option value="XXL">XXL</option>
+                            <option value="Free Size">Free Size</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-palette"></i> Color</label>
+                        <input type="text" name="color" placeholder="e.g., Red, Blue, Black">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-star"></i> Condition *</label>
+                        <select name="condition" required>
+                            <option value="new">New with tags</option>
+                            <option value="like-new">Like New</option>
+                            <option value="good">Good</option>
+                            <option value="fair">Fair</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-money-bill"></i> Price (UGX) *</label>
+                        <input type="number" name="price" required placeholder="50000" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-map-marker-alt"></i> Location *</label>
+                        <select name="location" required>
+                            <option value="Kampala">Kampala</option>
+                            <option value="Entebbe">Entebbe</option>
+                            <option value="Jinja">Jinja</option>
+                            <option value="Mbarara">Mbarara</option>
+                            <option value="Gulu">Gulu</option>
+                            <option value="Mbale">Mbale</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-align-left"></i> Description</label>
+                    <textarea name="description" rows="3" placeholder="Describe your item (material, fit, any defects, etc.)"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-phone"></i> Phone Number</label>
+                        <input type="tel" name="phone" placeholder="+256 700 000 000">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fab fa-whatsapp"></i> WhatsApp Number</label>
+                        <input type="tel" name="whatsapp" placeholder="+256 700 000 000">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    <i class="fas fa-check"></i> Post Item for Sale
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+</body>
+</html>

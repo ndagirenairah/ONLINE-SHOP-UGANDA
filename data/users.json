@@ -1,0 +1,38 @@
+[
+  {
+    "id": "demo-user-1",
+    "fullName": "Sarah Nakamya",
+    "email": "sarah@example.com",
+    "password": "demo123",
+    "phone": "+256 772 123 456",
+    "whatsapp": "+256 772 123 456",
+    "location": "Kampala",
+    "userType": "seller",
+    "createdAt": "2026-01-15T10:00:00.000Z",
+    "avatar": null
+  },
+  {
+    "id": "demo-user-2",
+    "fullName": "John Okello",
+    "email": "john@example.com",
+    "password": "demo123",
+    "phone": "+256 701 234 567",
+    "whatsapp": "+256 701 234 567",
+    "location": "Entebbe",
+    "userType": "seller",
+    "createdAt": "2026-01-20T14:30:00.000Z",
+    "avatar": null
+  },
+  {
+    "id": "ac7905a7-d8fa-40b5-b017-98ff04a094f9",
+    "fullName": "Nairah",
+    "email": "namubiruhusina@gmail.com",
+    "password": "12345678Husina",
+    "phone": "+256700518006",
+    "whatsapp": "+256700518006",
+    "location": "Kampala",
+    "userType": "seller",
+    "createdAt": "2026-02-10T11:30:04.725Z",
+    "avatar": null
+  }
+]
