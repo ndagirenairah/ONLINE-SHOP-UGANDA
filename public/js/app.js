@@ -602,7 +602,7 @@ async function renderProductPage(productId) {
                             <!-- Contact Buttons -->
                             <div class="contact-buttons">
                                 ${product.whatsapp || product.phone ? `
-                                    <a href="https://wa.me/${formatPhoneForWhatsApp(product.whatsapp || product.phone)}?text=Hi! I'm interested in your item: ${encodeURIComponent(product.name)} on StyleBay" 
+                                    <a href="https://wa.me/${formatPhoneForWhatsApp(product.whatsapp || product.phone)}?text=${encodeURIComponent(`Hello! 👋 I am interested in this item:\n\n📦 *${product.name}*\n💰 Price: UGX ${formatPrice(product.price)}\n📍 Location: ${product.location}\n\nIs it still available?`)}" 
                                        target="_blank" class="contact-btn whatsapp">
                                         <i class="fab fa-whatsapp"></i>
                                         Chat on WhatsApp
