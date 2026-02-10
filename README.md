@@ -1,8 +1,18 @@
 # 🇺🇬 ONLINE-SHOP-UGANDA - Uganda's Fashion Marketplace
 
-![African Woman Sewing](https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=1200&h=400&fit=crop)
+<div align="center">
 
-> **Buy and sell clothes, shoes, and accessories in Uganda!**
+![African Woman Sewing Clothes](https://images.unsplash.com/photo-1612837017391-4b6b7b0e2b0b?w=800&h=400&fit=crop)
+
+### 👗 **Handcrafted Fashion Made in Uganda** 🧵
+
+*Empowering local tailors and fashion entrepreneurs across Uganda*
+
+</div>
+
+---
+
+> **🛒 Buy and sell clothes, shoes, and accessories in Uganda!**
 
 ONLINE-SHOP-UGANDA is a modern online fashion marketplace designed specifically for Uganda. Inspired by platforms like Jumia, it allows anyone to list and sell their fashion items, from dresses to shoes to traditional wear.
 
