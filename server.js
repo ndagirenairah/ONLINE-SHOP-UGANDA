@@ -267,6 +267,7 @@ app.post('/api/products', upload.array('images', 5), (req, res) => {
         sellerId,
         phone: phone || '',
         whatsapp: whatsapp || '',
+        status: 'available', // available or sold
         views: 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -314,6 +315,28 @@ app.put('/api/products/:id', upload.array('images', 5), (req, res) => {
 
     writeData(productsFile, products);
     res.json({ message: 'Product updated!', product: products[index] });
+});
+
+// Update product status (available/sold)
+app.patch('/api/products/:id/status', (req, res) => {
+    const { status } = req.body;
+    
+    if (!status || !['available', 'sold'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status. Use "available" or "sold"' });
+    }
+    
+    const products = readData(productsFile);
+    const index = products.findIndex(p => p.id === req.params.id);
+    
+    if (index === -1) {
+        return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    products[index].status = status;
+    products[index].updatedAt = new Date().toISOString();
+    
+    writeData(productsFile, products);
+    res.json({ message: `Product marked as ${status}!`, product: products[index] });
 });
 
 // Delete product

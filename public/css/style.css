@@ -1072,6 +1072,90 @@ input, select, textarea {
     color: var(--dark);
 }
 
+/* NEW Arrival Badge */
+.new-arrival-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #00c853, #00e676);
+    color: var(--white);
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    animation: pulse 2s infinite;
+    z-index: 5;
+    box-shadow: 0 4px 15px rgba(0, 200, 83, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.new-arrival-badge + .product-badge {
+    top: 50px;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Status Badge (Available/Sold) */
+.status-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    padding: 5px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.status-badge.available {
+    background: rgba(0, 200, 83, 0.9);
+    color: var(--white);
+}
+
+.status-badge.sold {
+    background: rgba(244, 67, 54, 0.9);
+    color: var(--white);
+}
+
+/* Sold Item Overlay */
+.product-card.sold-item .product-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 2;
+}
+
+.product-card.sold-item .product-image img {
+    filter: grayscale(50%);
+}
+
+/* Product Date */
+.product-date {
+    font-size: 0.8rem;
+    color: var(--dark-gray);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.product-date i {
+    color: var(--primary);
+}
+
 .product-wishlist {
     position: absolute;
     top: 12px;
@@ -1771,7 +1855,7 @@ input, select, textarea {
 /* Listing Item */
 .listing-item {
     display: grid;
-    grid-template-columns: 120px 1fr auto;
+    grid-template-columns: 140px 1fr auto;
     gap: 20px;
     align-items: center;
     background: var(--white);
@@ -1779,13 +1863,41 @@ input, select, textarea {
     border-radius: var(--radius-lg);
     margin-bottom: 15px;
     box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
 }
 
-.listing-item img {
+.listing-item:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.listing-item.sold {
+    background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+    opacity: 0.85;
+}
+
+.listing-image-wrapper {
+    position: relative;
+}
+
+.listing-item img,
+.listing-image-wrapper img {
     width: 120px;
     height: 100px;
     object-fit: cover;
     border-radius: var(--radius-md);
+}
+
+.listing-image-wrapper .new-tag {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background: linear-gradient(135deg, #00c853, #00e676);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
 }
 
 .listing-info h3 {
@@ -1805,16 +1917,60 @@ input, select, textarea {
     margin-top: 5px;
 }
 
+.listing-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-top: 8px;
+}
+
+.listing-status.available {
+    background: rgba(0, 200, 83, 0.15);
+    color: #00c853;
+}
+
+.listing-status.sold {
+    background: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+}
+
 .listing-actions {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .listing-actions button {
     padding: 8px 15px;
     border-radius: var(--radius-sm);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-status {
+    background: linear-gradient(135deg, #00c853, #00e676);
+    color: white;
+}
+
+.btn-status:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
+}
+
+.btn-status.sold {
+    background: linear-gradient(135deg, #2196f3, #42a5f5);
+}
+
+.btn-status.sold:hover {
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
 }
 
 .btn-edit {
@@ -1835,6 +1991,15 @@ input, select, textarea {
 .btn-delete:hover {
     background: var(--danger);
     color: var(--white);
+}
+
+/* Stat Card Colors */
+.stat-card.available i {
+    color: #00c853;
+}
+
+.stat-card.sold i {
+    color: #f44336;
 }
 
 /* ==========================================

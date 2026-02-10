@@ -1,5 +1,5 @@
 /* ==========================================
-   STYLEBAY - Main JavaScript Application
+   ONLINE-SHOP-UGANDA - Main JavaScript Application
    Uganda's #1 Fashion Marketplace
    ========================================== */
 
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function init() {
     // Check for saved user session
-    const savedUser = localStorage.getItem('stylebay_user');
+    const savedUser = localStorage.getItem('onlineshopug_user');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         updateAuthUI();
@@ -346,14 +346,21 @@ function renderProductCards(productList) {
         `;
     }
     
-    return productList.map(product => `
-        <div class="product-card" onclick="viewProduct('${product.id}')">
+    return productList.map(product => {
+        const isNew = isRecentlyPosted(product.createdAt);
+        const status = product.status || 'available';
+        return `
+        <div class="product-card ${status === 'sold' ? 'sold-item' : ''}" onclick="viewProduct('${product.id}')">
             <div class="product-image">
                 <img src="${product.images[0] || 'https://via.placeholder.com/300x300?text=No+Image'}" 
                      alt="${product.name}"
                      onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
+                ${isNew ? '<span class="new-arrival-badge"><i class="fas fa-bolt"></i> NEW</span>' : ''}
                 <span class="product-badge ${product.condition !== 'new' ? 'used' : ''}">
-                    ${product.condition === 'new' ? 'New' : product.condition}
+                    ${product.condition === 'new' ? 'Brand New' : product.condition}
+                </span>
+                <span class="status-badge ${status}">
+                    ${status === 'sold' ? '<i class="fas fa-check-circle"></i> SOLD' : '<i class="fas fa-tag"></i> Available'}
                 </span>
                 <button class="product-wishlist ${isInFavorites(product.id) ? 'active' : ''}" 
                         data-product-id="${product.id}"
@@ -367,6 +374,9 @@ function renderProductCards(productList) {
                     <span><i class="fas fa-ruler"></i> ${product.size}</span>
                     <span><i class="fas fa-palette"></i> ${product.color || 'Various'}</span>
                 </div>
+                <div class="product-date">
+                    <i class="fas fa-calendar-alt"></i> Posted ${formatDateRelative(product.createdAt)}
+                </div>
                 <div class="product-price">
                     <span class="price">UGX ${formatPrice(product.price)}</span>
                     <span class="location">
@@ -375,7 +385,7 @@ function renderProductCards(productList) {
                 </div>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 function scrollToProducts() {
@@ -780,10 +790,15 @@ async function renderMyListingsPage() {
                         <h3>${totalViews}</h3>
                         <p>Total Views</p>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card available">
+                        <i class="fas fa-tag"></i>
+                        <h3>${userProducts.filter(p => (p.status || 'available') === 'available').length}</h3>
+                        <p>Available</p>
+                    </div>
+                    <div class="stat-card sold">
                         <i class="fas fa-check-circle"></i>
-                        <h3>${userProducts.filter(p => p.condition === 'new').length}</h3>
-                        <p>New Items</p>
+                        <h3>${userProducts.filter(p => p.status === 'sold').length}</h3>
+                        <p>Sold</p>
                     </div>
                 </div>
                 
@@ -798,19 +813,33 @@ async function renderMyListingsPage() {
                                 <i class="fas fa-plus"></i> Post Your First Item
                             </button>
                         </div>
-                    ` : userProducts.map(product => `
-                        <div class="listing-item">
-                            <img src="${product.images[0] || 'https://via.placeholder.com/120x100?text=No+Image'}" 
-                                 alt="${product.name}">
+                    ` : userProducts.map(product => {
+                        const status = product.status || 'available';
+                        const isNew = isRecentlyPosted(product.createdAt);
+                        return `
+                        <div class="listing-item ${status === 'sold' ? 'sold' : ''}">
+                            <div class="listing-image-wrapper">
+                                <img src="${product.images[0] || 'https://via.placeholder.com/120x100?text=No+Image'}" 
+                                     alt="${product.name}">
+                                ${isNew ? '<span class="new-tag">NEW</span>' : ''}
+                            </div>
                             <div class="listing-info">
                                 <h3>${product.name}</h3>
                                 <div class="price">UGX ${formatPrice(product.price)}</div>
                                 <div class="meta">
                                     <i class="fas fa-eye"></i> ${product.views || 0} views • 
-                                    <i class="fas fa-calendar"></i> ${formatDate(product.createdAt)}
+                                    <i class="fas fa-calendar"></i> Posted ${formatDateRelative(product.createdAt)}
+                                </div>
+                                <div class="listing-status ${status}">
+                                    <i class="fas ${status === 'sold' ? 'fa-check-circle' : 'fa-tag'}"></i>
+                                    ${status === 'sold' ? 'SOLD' : 'Available'}
                                 </div>
                             </div>
                             <div class="listing-actions">
+                                <button class="btn-status ${status}" onclick="toggleProductStatus('${product.id}', '${status}')" title="${status === 'sold' ? 'Mark as Available' : 'Mark as Sold'}">
+                                    <i class="fas ${status === 'sold' ? 'fa-undo' : 'fa-check'}"></i>
+                                    ${status === 'sold' ? 'Relist' : 'Mark Sold'}
+                                </button>
                                 <button class="btn-edit" onclick="editProduct('${product.id}')">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
@@ -819,11 +848,27 @@ async function renderMyListingsPage() {
                                 </button>
                             </div>
                         </div>
-                    `).join('')}
+                    `}).join('')}
                 </div>
             </div>
         </section>
     `;
+}
+
+async function toggleProductStatus(productId, currentStatus) {
+    const newStatus = currentStatus === 'sold' ? 'available' : 'sold';
+    
+    try {
+        await fetchAPI(`/api/products/${productId}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        showToast(`Item marked as ${newStatus}!`, 'success');
+        renderMyListingsPage();
+    } catch (error) {
+        showToast('Failed to update status', 'error');
+    }
 }
 
 async function editProduct(productId) {
@@ -1078,7 +1123,7 @@ async function handleLogin(event) {
         });
         
         currentUser = response.user;
-        localStorage.setItem('stylebay_user', JSON.stringify(currentUser));
+        localStorage.setItem('onlineshopug_user', JSON.stringify(currentUser));
         
         updateAuthUI();
         closeModal('authModal');
@@ -1110,11 +1155,11 @@ async function handleRegister(event) {
         });
         
         currentUser = response.user;
-        localStorage.setItem('stylebay_user', JSON.stringify(currentUser));
+        localStorage.setItem('onlineshopug_user', JSON.stringify(currentUser));
         
         updateAuthUI();
         closeModal('authModal');
-        showToast('Account created successfully! Welcome to StyleBay!', 'success');
+        showToast('Account created successfully! Welcome to ONLINE-SHOP-UGANDA!', 'success');
         
         form.reset();
     } catch (error) {
@@ -1124,7 +1169,7 @@ async function handleRegister(event) {
 
 function logout() {
     currentUser = null;
-    localStorage.removeItem('stylebay_user');
+    localStorage.removeItem('onlineshopug_user');
     updateAuthUI();
     navigateTo('home');
     showToast('Logged out successfully', 'success');
@@ -1313,6 +1358,35 @@ function formatDate(dateString) {
         month: 'short', 
         year: 'numeric' 
     });
+}
+
+function formatDateRelative(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    
+    return date.toLocaleDateString('en-UG', { 
+        day: 'numeric', 
+        month: 'short'
+    });
+}
+
+function isRecentlyPosted(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return days <= 7; // Items posted within 7 days are "NEW"
 }
 
 function formatPhoneForWhatsApp(phone) {

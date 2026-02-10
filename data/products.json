@@ -16,6 +16,7 @@
     "sellerId": "demo-user-1",
     "phone": "+256 772 123 456",
     "whatsapp": "+256 772 123 456",
+    "status": "available",
     "views": 247,
     "createdAt": "2026-02-01T09:00:00.000Z",
     "updatedAt": "2026-02-01T09:00:00.000Z"
@@ -36,6 +37,7 @@
     "sellerId": "demo-user-1",
     "phone": "+256 772 123 456",
     "whatsapp": "+256 772 123 456",
+    "status": "sold",
     "views": 189,
     "createdAt": "2026-02-02T11:30:00.000Z",
     "updatedAt": "2026-02-02T11:30:00.000Z"
@@ -57,6 +59,7 @@
     "sellerId": "demo-user-2",
     "phone": "+256 701 234 567",
     "whatsapp": "+256 701 234 567",
+    "status": "available",
     "views": 313,
     "createdAt": "2026-02-03T08:15:00.000Z",
     "updatedAt": "2026-02-03T08:15:00.000Z"
@@ -77,6 +80,7 @@
     "sellerId": "demo-user-1",
     "phone": "+256 772 123 456",
     "whatsapp": "+256 772 123 456",
+    "status": "available",
     "views": 456,
     "createdAt": "2026-02-04T14:00:00.000Z",
     "updatedAt": "2026-02-04T14:00:00.000Z"
@@ -97,6 +101,7 @@
     "sellerId": "demo-user-2",
     "phone": "+256 701 234 567",
     "whatsapp": "+256 701 234 567",
+    "status": "available",
     "views": 178,
     "createdAt": "2026-02-05T10:45:00.000Z",
     "updatedAt": "2026-02-05T10:45:00.000Z"
@@ -117,6 +122,7 @@
     "sellerId": "demo-user-1",
     "phone": "+256 772 123 456",
     "whatsapp": "+256 772 123 456",
+    "status": "available",
     "views": 98,
     "createdAt": "2026-02-06T16:20:00.000Z",
     "updatedAt": "2026-02-06T16:20:00.000Z"
@@ -137,6 +143,7 @@
     "sellerId": "demo-user-2",
     "phone": "+256 701 234 567",
     "whatsapp": "+256 701 234 567",
+    "status": "available",
     "views": 145,
     "createdAt": "2026-02-07T12:00:00.000Z",
     "updatedAt": "2026-02-07T12:00:00.000Z"
@@ -157,6 +164,7 @@
     "sellerId": "demo-user-1",
     "phone": "+256 772 123 456",
     "whatsapp": "+256 772 123 456",
+    "status": "available",
     "views": 234,
     "createdAt": "2026-02-08T09:30:00.000Z",
     "updatedAt": "2026-02-08T09:30:00.000Z"
@@ -177,6 +185,7 @@
     "sellerId": "demo-user-2",
     "phone": "+256 701 234 567",
     "whatsapp": "+256 701 234 567",
+    "status": "available",
     "views": 167,
     "createdAt": "2026-02-09T15:45:00.000Z",
     "updatedAt": "2026-02-09T15:45:00.000Z"
@@ -197,6 +206,7 @@
     "sellerId": "demo-user-1",
     "phone": "+256 772 123 456",
     "whatsapp": "+256 772 123 456",
+    "status": "available",
     "views": 89,
     "createdAt": "2026-02-10T07:00:00.000Z",
     "updatedAt": "2026-02-10T07:00:00.000Z"
@@ -217,6 +227,7 @@
     "sellerId": "ac7905a7-d8fa-40b5-b017-98ff04a094f9",
     "phone": "+256700518006",
     "whatsapp": "+256700518006",
+    "status": "available",
     "views": 0,
     "createdAt": "2026-02-10T11:36:20.189Z",
     "updatedAt": "2026-02-10T11:36:20.189Z"
