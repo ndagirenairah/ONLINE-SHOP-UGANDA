@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![African Woman Sewing Clothes](https://images.unsplash.com/photo-1612837017391-4b6b7b0e2b0b?w=800&h=400&fit=crop)
+![African Woman Sewing Clothes](https://images.unsplash.com/photo-1559551409-dadc959f76b8?w=800&h=400&fit=crop)
 
 ### 👗 **Handcrafted Fashion Made in Uganda** 🧵
 
