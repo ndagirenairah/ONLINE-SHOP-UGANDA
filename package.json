@@ -1,14 +1,17 @@
 {
-  "name": "stylebay-marketplace",
+  "name": "online-shop-uganda",
   "version": "1.0.0",
-  "description": "StyleBay - Uganda's Fashion Marketplace Platform",
+  "description": "ONLINE-SHOP-UGANDA - Uganda's Fashion Marketplace Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "keywords": ["fashion", "marketplace", "uganda", "clothing", "ecommerce"],
-  "author": "StyleBay Team",
+  "author": "ONLINE-SHOP-UGANDA Team",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",

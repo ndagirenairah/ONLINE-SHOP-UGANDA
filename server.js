@@ -426,11 +426,11 @@ app.get('*', (req, res) => {
 // Start server
 app.listen(PORT, () => {
     console.log(`
-    🛍️  ================================
-    🔥  STYLEBAY - Fashion Marketplace
-    🛍️  ================================
+    🇺🇬  ================================
+    🛒  ONLINE-SHOP-UGANDA
+    🇺🇬  ================================
     
-    🚀 Server running on: http://localhost:${PORT}
+    🚀 Server running on port: ${PORT}
     📦 Ready to serve Uganda's fashion!
     
     ================================
