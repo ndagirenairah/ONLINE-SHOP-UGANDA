@@ -1,6 +1,6 @@
 # 🇺🇬 ONLINE-SHOP-UGANDA - Uganda's Fashion Marketplace
 
-![African Women Sewing](https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=1200&h=400&fit=crop)
+![African Woman Sewing](https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=1200&h=400&fit=crop)
 
 > **Buy and sell clothes, shoes, and accessories in Uganda!**
 
