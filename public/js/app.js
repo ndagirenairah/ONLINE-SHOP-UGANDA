@@ -1159,7 +1159,7 @@ async function handleRegister(event) {
         
         updateAuthUI();
         closeModal('authModal');
-        showToast('Account created successfully! Welcome to ONLINE-SHOP-UGANDA!', 'success');
+        showToast('Account created successfully! Welcome to Online Shop Uganda! 🛍️', 'success');
         
         form.reset();
     } catch (error) {
