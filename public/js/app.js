@@ -196,7 +196,7 @@ async function renderHomePage() {
                             Discover Amazing
                             <span>Fashion Deals ✨</span>
                         </h1>
-                        <p>Buy and sell clothes, shoes, bags, and accessories. Join thousands of Ugandans trading fashion on StyleBay - your style, your price!</p>
+                        <p>Buy and sell clothes, shoes, bags, and accessories. Join thousands of Ugandans trading fashion on Online Shop Uganda - your style, your price!</p>
                         <div class="hero-buttons">
                             <button class="btn btn-secondary" onclick="scrollToProducts()">
                                 <i class="fas fa-search"></i> Browse Items
@@ -734,9 +734,9 @@ function requestDelivery(productId) {
             
             <div class="delivery-contact">
                 <p>Or contact us for delivery assistance:</p>
-                <a href="https://wa.me/256700518006?text=Hi! I need help with delivery for an item on StyleBay" 
+                <a href="https://wa.me/256700518006?text=Hi! I need help with delivery for an item on Online Shop Uganda" 
                    target="_blank" class="btn btn-whatsapp">
-                    <i class="fab fa-whatsapp"></i> Chat with StyleBay Support
+                    <i class="fab fa-whatsapp"></i> Chat with Support
                 </a>
             </div>
             
@@ -952,7 +952,7 @@ function renderAboutPage() {
         <section style="padding: 60px 0;">
             <div class="container">
                 <div style="max-width: 800px; margin: 0 auto; text-align: center;">
-                    <h1 style="font-size: 2.5rem; margin-bottom: 20px;">About StyleBay 🛍️</h1>
+                    <h1 style="font-size: 2.5rem; margin-bottom: 20px;">About Online Shop Uganda 🛍️</h1>
                     <p style="font-size: 1.2rem; color: var(--dark-gray); margin-bottom: 40px;">
                         Uganda's Premier Fashion Marketplace
                     </p>
@@ -960,7 +960,7 @@ function renderAboutPage() {
                     <div style="text-align: left; background: var(--white); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
                         <h2 style="margin-bottom: 15px;">Our Mission</h2>
                         <p style="margin-bottom: 25px; color: var(--secondary-light); line-height: 1.8;">
-                            StyleBay is Uganda's first dedicated fashion marketplace where anyone can buy and sell clothing, 
+                            Online Shop Uganda is Uganda's premier fashion marketplace where anyone can buy and sell clothing, 
                             shoes, and accessories. We're building a platform that makes fashion accessible to everyone.
                         </p>
                         
@@ -983,7 +983,7 @@ function renderAboutPage() {
                             </div>
                         </div>
                         
-                        <h2 style="margin-bottom: 15px;">Why Choose StyleBay?</h2>
+                        <h2 style="margin-bottom: 15px;">Why Choose Online Shop Uganda?</h2>
                         <ul style="color: var(--secondary-light); line-height: 2;">
                             <li>✅ Free to list items</li>
                             <li>✅ Direct contact with buyers via WhatsApp</li>
@@ -1044,12 +1044,12 @@ function renderContactPage() {
                                 </div>
                                 <div>
                                     <h3 style="font-size: 1rem; margin-bottom: 3px;">Email</h3>
-                                    <p style="color: var(--dark-gray);">info@stylebay.ug</p>
+                                    <p style="color: var(--dark-gray);">info@onlineshopuganda.me</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <a href="https://wa.me/256700518006?text=Hello StyleBay! I have a question..." 
+                        <a href="https://wa.me/256700518006?text=Hello Online Shop Uganda! I have a question..." 
                            target="_blank" 
                            class="btn btn-primary btn-block btn-lg" style="background: var(--whatsapp);">
                             <i class="fab fa-whatsapp"></i> Chat with us on WhatsApp
@@ -1442,7 +1442,7 @@ function isInFavorites(productId) {
 }
 
 function loadFavorites() {
-    const saved = localStorage.getItem('stylebay_favorites');
+    const saved = localStorage.getItem('onlineshopug_favorites');
     if (saved) {
         try {
             favorites = JSON.parse(saved);
@@ -1454,7 +1454,7 @@ function loadFavorites() {
 }
 
 function saveFavorites() {
-    localStorage.setItem('stylebay_favorites', JSON.stringify(favorites));
+    localStorage.setItem('onlineshopug_favorites', JSON.stringify(favorites));
 }
 
 function updateFavoriteButtons() {

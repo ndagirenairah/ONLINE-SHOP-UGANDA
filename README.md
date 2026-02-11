@@ -208,8 +208,8 @@ MIT License - feel free to use this for your own projects!
 ## 📞 Contact
 
 For questions or support:
-- 📧 Email: info@stylebay.ug
-- 💬 WhatsApp: +256 700 000 000
+- 📧 Email: info@onlineshopuganda.me
+- 💬 WhatsApp: +256 700 518 006
 
 ---
 
