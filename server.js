@@ -3,9 +3,37 @@ const multer = require('multer');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const cors = require('cors');
+const cloudinary = require('cloudinary').v2;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Helper function to upload image to Cloudinary
+const uploadToCloudinary = (buffer, folder = 'online-shop-uganda') => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { 
+                folder: folder,
+                transformation: [
+                    { width: 800, height: 1000, crop: 'limit' },
+                    { quality: 'auto' }
+                ]
+            },
+            (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            }
+        );
+        uploadStream.end(buffer);
+    });
+};
 
 // Middleware
 app.use(cors());
@@ -223,7 +251,7 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 // Create new product (with image upload)
-app.post('/api/products', upload.array('images', 5), (req, res) => {
+app.post('/api/products', upload.array('images', 5), async (req, res) => {
     try {
         const { name, category, size, color, condition, price, description, location, sellerId, phone, whatsapp } = req.body;
 
@@ -231,10 +259,16 @@ app.post('/api/products', upload.array('images', 5), (req, res) => {
             return res.status(400).json({ error: 'Please fill all required fields' });
         }
 
-        // For serverless, we'll use placeholder images or URLs passed in the request
-        // In production, upload to cloud storage like Cloudinary or AWS S3
+        // Upload images to Cloudinary
         let images = [];
-        if (req.body.imageUrls) {
+        
+        if (req.files && req.files.length > 0) {
+            // Upload each file to Cloudinary
+            const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
+            const uploadResults = await Promise.all(uploadPromises);
+            images = uploadResults.map(result => result.secure_url);
+        } else if (req.body.imageUrls) {
+            // Use provided URLs
             images = Array.isArray(req.body.imageUrls) ? req.body.imageUrls : [req.body.imageUrls];
         } else {
             // Use a placeholder image
@@ -271,7 +305,7 @@ app.post('/api/products', upload.array('images', 5), (req, res) => {
 });
 
 // Update product
-app.put('/api/products/:id', upload.array('images', 5), (req, res) => {
+app.put('/api/products/:id', upload.array('images', 5), async (req, res) => {
     try {
         const index = products.findIndex(p => p.id === req.params.id);
 
@@ -282,7 +316,13 @@ app.put('/api/products/:id', upload.array('images', 5), (req, res) => {
         const { name, category, size, color, condition, price, description, location, phone, whatsapp, imageUrls } = req.body;
         
         let images = products[index].images;
-        if (imageUrls) {
+        
+        // Upload new images to Cloudinary if provided
+        if (req.files && req.files.length > 0) {
+            const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
+            const uploadResults = await Promise.all(uploadPromises);
+            images = uploadResults.map(result => result.secure_url);
+        } else if (imageUrls) {
             images = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
         }
 
