@@ -1142,6 +1142,109 @@ input, select, textarea {
     filter: grayscale(50%);
 }
 
+/* ==========================================
+   SOLD OUT BANNER & DETAIL PAGE STYLES
+   ========================================== */
+
+/* Sold Out Banner on Product Detail */
+.sold-out-banner {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    padding: 20px 30px;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.sold-out-banner i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.sold-out-banner span {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.sold-out-banner p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3); }
+    50% { box-shadow: 0 4px 25px rgba(220, 53, 69, 0.5); }
+}
+
+/* Sold Gallery Overlay */
+.product-gallery.sold-gallery {
+    position: relative;
+}
+
+.sold-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: var(--radius-lg);
+    pointer-events: none;
+}
+
+.sold-overlay span {
+    background: #dc3545;
+    color: white;
+    padding: 15px 40px;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 5px;
+    border-radius: var(--radius-md);
+    transform: rotate(-15deg);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.product-gallery.sold-gallery .main-image img {
+    filter: grayscale(60%);
+}
+
+/* Sold Message in Contact Buttons */
+.sold-message {
+    background: linear-gradient(135deg, #fff3cd, #ffeeba);
+    border: 1px solid #ffc107;
+    border-radius: var(--radius-md);
+    padding: 20px;
+    text-align: center;
+    width: 100%;
+}
+
+.sold-message i {
+    font-size: 2rem;
+    color: #856404;
+    margin-bottom: 10px;
+}
+
+.sold-message p {
+    margin: 0;
+    color: #856404;
+    font-weight: 500;
+}
+
+.contact-buttons.disabled-buttons {
+    opacity: 1;
+}
+
 /* Product Date */
 .product-date {
     font-size: 0.8rem;

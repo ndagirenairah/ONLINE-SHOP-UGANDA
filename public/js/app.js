@@ -528,10 +528,19 @@ async function renderProductPage(productId) {
         
         // Get product details
         const product = await fetchAPI(`/api/products/${productId}`);
+        const isSold = product.status === 'sold';
         
         main.innerHTML = `
-            <section class="product-detail">
+            <section class="product-detail ${isSold ? 'product-sold' : ''}">
                 <div class="container">
+                    ${isSold ? `
+                        <div class="sold-out-banner">
+                            <i class="fas fa-ban"></i>
+                            <span>SOLD OUT</span>
+                            <p>This item has been sold and is no longer available</p>
+                        </div>
+                    ` : ''}
+                    
                     <div class="detail-top-bar">
                         <button class="btn btn-secondary" onclick="navigateTo('home')">
                             <i class="fas fa-arrow-left"></i> Back to Shop
@@ -545,7 +554,8 @@ async function renderProductPage(productId) {
                     
                     <div class="product-detail-grid">
                         <!-- Gallery -->
-                        <div class="product-gallery">
+                        <div class="product-gallery ${isSold ? 'sold-gallery' : ''}">
+                            ${isSold ? '<div class="sold-overlay"><span>SOLD</span></div>' : ''}
                             <div class="main-image">
                                 <img id="mainProductImage" 
                                      src="${product.images[0] || 'https://via.placeholder.com/500x500?text=No+Image'}" 
@@ -600,26 +610,33 @@ async function renderProductPage(productId) {
                             </div>
                             
                             <!-- Contact Buttons -->
-                            <div class="contact-buttons">
-                                ${product.whatsapp || product.phone ? `
-                                    <a href="https://wa.me/${formatPhoneForWhatsApp(product.whatsapp || product.phone)}?text=${encodeURIComponent(`Hello! 👋 I am interested in this item:\n\n📦 *${product.name}*\n💰 Price: UGX ${formatPrice(product.price)}\n📍 Location: ${product.location}\n\nIs it still available?`)}" 
-                                       target="_blank" class="contact-btn whatsapp">
-                                        <i class="fab fa-whatsapp"></i>
-                                        Chat on WhatsApp
-                                    </a>
-                                ` : ''}
-                                
-                                ${product.phone ? `
-                                    <a href="tel:${product.phone}" class="contact-btn call">
-                                        <i class="fas fa-phone"></i>
-                                        Call Seller
-                                    </a>
-                                ` : ''}
-                                
-                                <button class="contact-btn delivery" onclick="requestDelivery('${product.id}')">
-                                    <i class="fas fa-truck"></i>
-                                    Request Delivery
-                                </button>
+                            <div class="contact-buttons ${isSold ? 'disabled-buttons' : ''}">
+                                ${isSold ? `
+                                    <div class="sold-message">
+                                        <i class="fas fa-info-circle"></i>
+                                        <p>This item has been sold. Browse other items!</p>
+                                    </div>
+                                ` : `
+                                    ${product.whatsapp || product.phone ? `
+                                        <a href="https://wa.me/${formatPhoneForWhatsApp(product.whatsapp || product.phone)}?text=${encodeURIComponent(`Hello! 👋 I am interested in this item:\n\n📦 *${product.name}*\n💰 Price: UGX ${formatPrice(product.price)}\n📍 Location: ${product.location}\n\nIs it still available?`)}" 
+                                           target="_blank" class="contact-btn whatsapp">
+                                            <i class="fab fa-whatsapp"></i>
+                                            Chat on WhatsApp
+                                        </a>
+                                    ` : ''}
+                                    
+                                    ${product.phone ? `
+                                        <a href="tel:${product.phone}" class="contact-btn call">
+                                            <i class="fas fa-phone"></i>
+                                            Call Seller
+                                        </a>
+                                    ` : ''}
+                                    
+                                    <button class="contact-btn delivery" onclick="requestDelivery('${product.id}')">
+                                        <i class="fas fa-truck"></i>
+                                        Request Delivery
+                                    </button>
+                                `}
                             </div>
                             
                             <!-- Seller Info -->
