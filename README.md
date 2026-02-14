@@ -54,6 +54,7 @@ ONLINE-SHOP-UGANDA is a modern online fashion marketplace designed specifically 
 ### Prerequisites
 - Node.js 18+ installed
 - npm or yarn
+- Cloudinary account (free) for image uploads
 
 ### Installation
 
@@ -67,12 +68,18 @@ ONLINE-SHOP-UGANDA is a modern online fashion marketplace designed specifically 
    npm install
    ```
 
-3. **Start the server:**
+3. **Set up environment variables:**
+   ```bash
+   cp .env.example .env
+   ```
+   Then edit `.env` with your Cloudinary credentials from [cloudinary.com/console](https://cloudinary.com/console)
+
+4. **Start the server:**
    ```bash
    npm start
    ```
 
-4. **Open in browser:**
+5. **Open in browser:**
    ```
    http://localhost:3000
    ```
@@ -82,6 +89,10 @@ ONLINE-SHOP-UGANDA is a modern online fashion marketplace designed specifically 
 npm run dev
 ```
 This uses nodemon for auto-reload on file changes.
+
+### Image Uploads
+- With Cloudinary configured: Images are uploaded to Cloudinary CDN
+- Without Cloudinary: Images are stored as base64 data URLs (works but not recommended for production)
 
 ---
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const cors = require('cors');
 const cloudinary = require('cloudinary').v2;
@@ -8,12 +9,20 @@ const cloudinary = require('cloudinary').v2;
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configure Cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// Check if Cloudinary is configured
+const isCloudinaryConfigured = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+
+// Configure Cloudinary if credentials exist
+if (isCloudinaryConfigured) {
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET
+    });
+    console.log('✅ Cloudinary configured successfully');
+} else {
+    console.log('⚠️ Cloudinary not configured - images will be stored as base64 data URLs');
+}
 
 // Helper function to upload image to Cloudinary
 const uploadToCloudinary = (buffer, folder = 'online-shop-uganda') => {
@@ -33,6 +42,35 @@ const uploadToCloudinary = (buffer, folder = 'online-shop-uganda') => {
         );
         uploadStream.end(buffer);
     });
+};
+
+// Helper function to convert buffer to base64 data URL
+const bufferToDataUrl = (buffer, mimetype) => {
+    const base64 = buffer.toString('base64');
+    return `data:${mimetype};base64,${base64}`;
+};
+
+// Helper function to process uploaded images (Cloudinary or Base64)
+const processUploadedImages = async (files) => {
+    if (!files || files.length === 0) {
+        return [];
+    }
+    
+    if (isCloudinaryConfigured) {
+        // Upload to Cloudinary
+        try {
+            const uploadPromises = files.map(file => uploadToCloudinary(file.buffer));
+            const uploadResults = await Promise.all(uploadPromises);
+            return uploadResults.map(result => result.secure_url);
+        } catch (error) {
+            console.error('Cloudinary upload failed:', error.message);
+            // Fallback to base64 if Cloudinary fails
+            return files.map(file => bufferToDataUrl(file.buffer, file.mimetype));
+        }
+    } else {
+        // Convert to base64 data URLs
+        return files.map(file => bufferToDataUrl(file.buffer, file.mimetype));
+    }
 };
 
 // Middleware
@@ -259,14 +297,12 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
             return res.status(400).json({ error: 'Please fill all required fields' });
         }
 
-        // Upload images to Cloudinary
+        // Process uploaded images
         let images = [];
         
         if (req.files && req.files.length > 0) {
-            // Upload each file to Cloudinary
-            const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
-            const uploadResults = await Promise.all(uploadPromises);
-            images = uploadResults.map(result => result.secure_url);
+            // Process images (Cloudinary or Base64)
+            images = await processUploadedImages(req.files);
         } else if (req.body.imageUrls) {
             // Use provided URLs
             images = Array.isArray(req.body.imageUrls) ? req.body.imageUrls : [req.body.imageUrls];
@@ -317,11 +353,9 @@ app.put('/api/products/:id', upload.array('images', 5), async (req, res) => {
         
         let images = products[index].images;
         
-        // Upload new images to Cloudinary if provided
+        // Process new images if provided
         if (req.files && req.files.length > 0) {
-            const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
-            const uploadResults = await Promise.all(uploadPromises);
-            images = uploadResults.map(result => result.secure_url);
+            images = await processUploadedImages(req.files);
         } else if (imageUrls) {
             images = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
         }
