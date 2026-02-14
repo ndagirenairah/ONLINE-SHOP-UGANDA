@@ -159,18 +159,7 @@ const categories = [
 
 ---
 
-## 📱 Demo Accounts
-
-For testing, use these demo accounts:
-
-| Email | Password | Name |
-|-------|----------|------|
-| sarah@example.com | demo123 | Sarah Nakamya |
-| john@example.com | demo123 | John Okello |
-
----
-
-## 🛣️ Roadmap
+## ️ Roadmap
 
 - [ ] User profile page with avatar upload
 - [ ] Wishlist/favorites functionality
