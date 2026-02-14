@@ -1,7 +1,7 @@
-const express = require('express');
+﻿const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 const cors = require('cors');
 const cloudinary = require('cloudinary').v2;
@@ -9,22 +9,90 @@ const cloudinary = require('cloudinary').v2;
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Check if Cloudinary is configured
+// ==================== MONGODB CONNECTION ====================
+const MONGODB_URI = process.env.MONGODB_URI || '';
+
+let isDbConnected = false;
+
+const connectDB = async () => {
+    if (isDbConnected || !MONGODB_URI) {
+        if (!MONGODB_URI) {
+            console.log(' MONGODB_URI not set - using in-memory storage (data will not persist)');
+        }
+        return;
+    }
+    
+    try {
+        await mongoose.connect(MONGODB_URI);
+        isDbConnected = true;
+        console.log(' MongoDB connected successfully');
+    } catch (error) {
+        console.error(' MongoDB connection error:', error.message);
+    }
+};
+
+connectDB();
+
+// ==================== MONGODB SCHEMAS ====================
+
+const userSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    fullName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    phone: { type: String, required: true },
+    whatsapp: String,
+    location: { type: String, default: 'Uganda' },
+    userType: { type: String, default: 'seller' },
+    avatar: String,
+    createdAt: { type: Date, default: Date.now }
+});
+
+const productSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    category: { type: String, required: true },
+    size: { type: String, default: 'M' },
+    color: { type: String, default: 'Various' },
+    condition: { type: String, default: 'new' },
+    price: { type: Number, required: true },
+    description: String,
+    location: { type: String, default: 'Uganda' },
+    images: [String],
+    sellerId: { type: String, required: true },
+    phone: String,
+    whatsapp: String,
+    status: { type: String, default: 'available' },
+    views: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', userSchema);
+const Product = mongoose.model('Product', productSchema);
+
+// ==================== IN-MEMORY FALLBACK ====================
+let usersMemory = [];
+let productsMemory = [];
+
+// Helper to check if DB is available
+const useDB = () => isDbConnected && MONGODB_URI;
+
+// ==================== CLOUDINARY CONFIG ====================
+
 const isCloudinaryConfigured = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
 
-// Configure Cloudinary if credentials exist
 if (isCloudinaryConfigured) {
     cloudinary.config({
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
         api_key: process.env.CLOUDINARY_API_KEY,
         api_secret: process.env.CLOUDINARY_API_SECRET
     });
-    console.log('✅ Cloudinary configured successfully');
+    console.log(' Cloudinary configured successfully');
 } else {
-    console.log('⚠️ Cloudinary not configured - images will be stored as base64 data URLs');
+    console.log(' Cloudinary not configured - images will be stored as base64 data URLs');
 }
 
-// Helper function to upload image to Cloudinary
 const uploadToCloudinary = (buffer, folder = 'online-shop-uganda') => {
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -44,72 +112,52 @@ const uploadToCloudinary = (buffer, folder = 'online-shop-uganda') => {
     });
 };
 
-// Helper function to convert buffer to base64 data URL
 const bufferToDataUrl = (buffer, mimetype) => {
     const base64 = buffer.toString('base64');
     return `data:${mimetype};base64,${base64}`;
 };
 
-// Helper function to process uploaded images (Cloudinary or Base64)
 const processUploadedImages = async (files) => {
-    if (!files || files.length === 0) {
-        return [];
-    }
+    if (!files || files.length === 0) return [];
     
     if (isCloudinaryConfigured) {
-        // Upload to Cloudinary
         try {
             const uploadPromises = files.map(file => uploadToCloudinary(file.buffer));
             const uploadResults = await Promise.all(uploadPromises);
             return uploadResults.map(result => result.secure_url);
         } catch (error) {
             console.error('Cloudinary upload failed:', error.message);
-            // Fallback to base64 if Cloudinary fails
             return files.map(file => bufferToDataUrl(file.buffer, file.mimetype));
         }
     } else {
-        // Convert to base64 data URLs
         return files.map(file => bufferToDataUrl(file.buffer, file.mimetype));
     }
 };
 
-// Middleware
+// ==================== MIDDLEWARE ====================
+
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ==================== IN-MEMORY DATA STORE ====================
-// For Vercel serverless, we use in-memory storage
-// Note: Data will reset on each cold start. For persistence, use a database.
-
-let users = [];
-
-let products = [];
-
-// Multer configuration - use memory storage for serverless
 const storage = multer.memoryStorage();
-
 const upload = multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const allowedTypes = /jpeg|jpg|png|gif|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = allowedTypes.test(file.mimetype);
-        if (extname && mimetype) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only image files are allowed!'));
-        }
+        if (extname && mimetype) cb(null, true);
+        else cb(new Error('Only image files are allowed!'));
     }
 });
 
 // ==================== AUTH ROUTES ====================
 
-// Register new user
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
     try {
         const { fullName, email, password, phone, whatsapp, location, userType } = req.body;
         
@@ -117,27 +165,32 @@ app.post('/api/auth/register', (req, res) => {
             return res.status(400).json({ error: 'Please fill all required fields' });
         }
 
-        // Check if email already exists
-        if (users.find(u => u.email === email)) {
-            return res.status(400).json({ error: 'Email already registered' });
-        }
-
         const newUser = {
             id: uuidv4(),
             fullName,
             email,
-            password, // In production, hash this!
+            password,
             phone,
             whatsapp: whatsapp || phone,
             location: location || 'Uganda',
             userType: userType || 'seller',
-            createdAt: new Date().toISOString(),
+            createdAt: new Date(),
             avatar: null
         };
 
-        users.push(newUser);
+        if (useDB()) {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.status(400).json({ error: 'Email already registered' });
+            }
+            await User.create(newUser);
+        } else {
+            if (usersMemory.find(u => u.email === email)) {
+                return res.status(400).json({ error: 'Email already registered' });
+            }
+            usersMemory.push(newUser);
+        }
 
-        // Don't send password back
         const { password: _, ...userWithoutPassword } = newUser;
         res.status(201).json({ message: 'Registration successful!', user: userWithoutPassword });
     } catch (error) {
@@ -146,8 +199,7 @@ app.post('/api/auth/register', (req, res) => {
     }
 });
 
-// Login
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -155,13 +207,19 @@ app.post('/api/auth/login', (req, res) => {
             return res.status(400).json({ error: 'Email and password required' });
         }
 
-        const user = users.find(u => u.email === email && u.password === password);
+        let user;
+        if (useDB()) {
+            user = await User.findOne({ email, password });
+        } else {
+            user = usersMemory.find(u => u.email === email && u.password === password);
+        }
 
         if (!user) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        const { password: _, ...userWithoutPassword } = user;
+        const userObj = user.toObject ? user.toObject() : user;
+        const { password: _, ...userWithoutPassword } = userObj;
         res.json({ message: 'Login successful!', user: userWithoutPassword });
     } catch (error) {
         console.error('Login error:', error);
@@ -169,16 +227,21 @@ app.post('/api/auth/login', (req, res) => {
     }
 });
 
-// Get user profile
-app.get('/api/auth/user/:id', (req, res) => {
+app.get('/api/auth/user/:id', async (req, res) => {
     try {
-        const user = users.find(u => u.id === req.params.id);
+        let user;
+        if (useDB()) {
+            user = await User.findOne({ id: req.params.id });
+        } else {
+            user = usersMemory.find(u => u.id === req.params.id);
+        }
         
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        const { password: _, ...userWithoutPassword } = user;
+        const userObj = user.toObject ? user.toObject() : user;
+        const { password: _, ...userWithoutPassword } = userObj;
         res.json(userWithoutPassword);
     } catch (error) {
         console.error('Get user error:', error);
@@ -188,67 +251,85 @@ app.get('/api/auth/user/:id', (req, res) => {
 
 // ==================== PRODUCT ROUTES ====================
 
-// Get all products (with optional filters)
-app.get('/api/products', (req, res) => {
+app.get('/api/products', async (req, res) => {
     try {
-        let filteredProducts = [...products];
         const { category, size, minPrice, maxPrice, condition, search, location, sortBy } = req.query;
-
-        // Apply filters
-        if (category && category !== 'all' && category !== '') {
-            filteredProducts = filteredProducts.filter(p => 
-                p.category && p.category.toLowerCase() === category.toLowerCase()
-            );
-        }
         
-        if (size && size !== 'all' && size !== '') {
-            filteredProducts = filteredProducts.filter(p => 
-                p.size && p.size.toLowerCase() === size.toLowerCase()
-            );
-        }
+        let filteredProducts;
         
-        if (condition && condition !== 'all' && condition !== '') {
-            const conditionLower = condition.toLowerCase();
-            filteredProducts = filteredProducts.filter(p => {
-                if (!p.condition) return false;
-                const prodCondition = p.condition.toLowerCase();
-                return prodCondition === conditionLower || 
-                       (conditionLower === 'new' && prodCondition === 'new');
-            });
-        }
-        
-        if (location && location !== '') {
-            filteredProducts = filteredProducts.filter(p => 
-                p.location && p.location.toLowerCase().includes(location.toLowerCase())
-            );
-        }
-        
-        if (minPrice && !isNaN(parseFloat(minPrice))) {
-            filteredProducts = filteredProducts.filter(p => p.price >= parseFloat(minPrice));
-        }
-        
-        if (maxPrice && !isNaN(parseFloat(maxPrice))) {
-            filteredProducts = filteredProducts.filter(p => p.price <= parseFloat(maxPrice));
-        }
-        
-        if (search && search.trim() !== '') {
-            const searchLower = search.toLowerCase().trim();
-            filteredProducts = filteredProducts.filter(p => 
-                (p.name && p.name.toLowerCase().includes(searchLower)) ||
-                (p.description && p.description.toLowerCase().includes(searchLower)) ||
-                (p.category && p.category.toLowerCase().includes(searchLower)) ||
-                (p.color && p.color.toLowerCase().includes(searchLower))
-            );
-        }
-
-        // Sort
-        if (sortBy === 'price-low') {
-            filteredProducts.sort((a, b) => (a.price || 0) - (b.price || 0));
-        } else if (sortBy === 'price-high') {
-            filteredProducts.sort((a, b) => (b.price || 0) - (a.price || 0));
+        if (useDB()) {
+            let query = {};
+            
+            if (category && category !== 'all') {
+                query.category = { $regex: new RegExp(`^${category}$`, 'i') };
+            }
+            if (size && size !== 'all') {
+                query.size = { $regex: new RegExp(`^${size}$`, 'i') };
+            }
+            if (condition && condition !== 'all') {
+                query.condition = { $regex: new RegExp(`^${condition}$`, 'i') };
+            }
+            if (location) {
+                query.location = { $regex: location, $options: 'i' };
+            }
+            if (minPrice) {
+                query.price = { ...query.price, $gte: parseFloat(minPrice) };
+            }
+            if (maxPrice) {
+                query.price = { ...query.price, $lte: parseFloat(maxPrice) };
+            }
+            if (search) {
+                query.$or = [
+                    { name: { $regex: search, $options: 'i' } },
+                    { description: { $regex: search, $options: 'i' } },
+                    { category: { $regex: search, $options: 'i' } },
+                    { color: { $regex: search, $options: 'i' } }
+                ];
+            }
+            
+            let sortOption = { createdAt: -1 };
+            if (sortBy === 'price-low') sortOption = { price: 1 };
+            else if (sortBy === 'price-high') sortOption = { price: -1 };
+            
+            filteredProducts = await Product.find(query).sort(sortOption);
         } else {
-            // Default: newest first
-            filteredProducts.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            filteredProducts = [...productsMemory];
+            
+            if (category && category !== 'all') {
+                filteredProducts = filteredProducts.filter(p => p.category?.toLowerCase() === category.toLowerCase());
+            }
+            if (size && size !== 'all') {
+                filteredProducts = filteredProducts.filter(p => p.size?.toLowerCase() === size.toLowerCase());
+            }
+            if (condition && condition !== 'all') {
+                filteredProducts = filteredProducts.filter(p => p.condition?.toLowerCase() === condition.toLowerCase());
+            }
+            if (location) {
+                filteredProducts = filteredProducts.filter(p => p.location?.toLowerCase().includes(location.toLowerCase()));
+            }
+            if (minPrice) {
+                filteredProducts = filteredProducts.filter(p => p.price >= parseFloat(minPrice));
+            }
+            if (maxPrice) {
+                filteredProducts = filteredProducts.filter(p => p.price <= parseFloat(maxPrice));
+            }
+            if (search) {
+                const s = search.toLowerCase();
+                filteredProducts = filteredProducts.filter(p => 
+                    p.name?.toLowerCase().includes(s) || 
+                    p.description?.toLowerCase().includes(s) ||
+                    p.category?.toLowerCase().includes(s) ||
+                    p.color?.toLowerCase().includes(s)
+                );
+            }
+            
+            if (sortBy === 'price-low') {
+                filteredProducts.sort((a, b) => a.price - b.price);
+            } else if (sortBy === 'price-high') {
+                filteredProducts.sort((a, b) => b.price - a.price);
+            } else {
+                filteredProducts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
         }
 
         res.json(filteredProducts);
@@ -258,37 +339,45 @@ app.get('/api/products', (req, res) => {
     }
 });
 
-// Get single product
-app.get('/api/products/:id', (req, res) => {
+app.get('/api/products/:id', async (req, res) => {
     try {
-        const product = products.find(p => p.id === req.params.id);
+        let product, seller;
+        
+        if (useDB()) {
+            product = await Product.findOne({ id: req.params.id });
+            if (product) {
+                seller = await User.findOne({ id: product.sellerId });
+            }
+        } else {
+            product = productsMemory.find(p => p.id === req.params.id);
+            if (product) {
+                seller = usersMemory.find(u => u.id === product.sellerId);
+            }
+        }
         
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        // Get seller info
-        const seller = users.find(u => u.id === product.sellerId);
-        
-        const productWithSeller = { ...product };
+        const productObj = product.toObject ? product.toObject() : { ...product };
         if (seller) {
-            productWithSeller.seller = {
-                id: seller.id,
-                fullName: seller.fullName,
-                phone: seller.phone,
-                whatsapp: seller.whatsapp,
-                location: seller.location
+            const sellerObj = seller.toObject ? seller.toObject() : seller;
+            productObj.seller = {
+                id: sellerObj.id,
+                fullName: sellerObj.fullName,
+                phone: sellerObj.phone,
+                whatsapp: sellerObj.whatsapp,
+                location: sellerObj.location
             };
         }
 
-        res.json(productWithSeller);
+        res.json(productObj);
     } catch (error) {
         console.error('Get product error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Create new product (with image upload)
 app.post('/api/products', upload.array('images', 5), async (req, res) => {
     try {
         const { name, category, size, color, condition, price, description, location, sellerId, phone, whatsapp } = req.body;
@@ -297,17 +386,12 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
             return res.status(400).json({ error: 'Please fill all required fields' });
         }
 
-        // Process uploaded images
         let images = [];
-        
         if (req.files && req.files.length > 0) {
-            // Process images (Cloudinary or Base64)
             images = await processUploadedImages(req.files);
         } else if (req.body.imageUrls) {
-            // Use provided URLs
             images = Array.isArray(req.body.imageUrls) ? req.body.imageUrls : [req.body.imageUrls];
         } else {
-            // Use a placeholder image
             images = ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=500&fit=crop'];
         }
 
@@ -327,11 +411,15 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
             whatsapp: whatsapp || '',
             status: 'available',
             views: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            createdAt: new Date(),
+            updatedAt: new Date()
         };
 
-        products.push(newProduct);
+        if (useDB()) {
+            await Product.create(newProduct);
+        } else {
+            productsMemory.push(newProduct);
+        }
 
         res.status(201).json({ message: 'Product listed successfully!', product: newProduct });
     } catch (error) {
@@ -340,51 +428,60 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
     }
 });
 
-// Update product
 app.put('/api/products/:id', upload.array('images', 5), async (req, res) => {
     try {
-        const index = products.findIndex(p => p.id === req.params.id);
+        const { name, category, size, color, condition, price, description, location, phone, whatsapp, imageUrls } = req.body;
+        
+        let product;
+        if (useDB()) {
+            product = await Product.findOne({ id: req.params.id });
+        } else {
+            product = productsMemory.find(p => p.id === req.params.id);
+        }
 
-        if (index === -1) {
+        if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        const { name, category, size, color, condition, price, description, location, phone, whatsapp, imageUrls } = req.body;
-        
-        let images = products[index].images;
-        
-        // Process new images if provided
+        let images = product.images;
         if (req.files && req.files.length > 0) {
             images = await processUploadedImages(req.files);
         } else if (imageUrls) {
             images = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
         }
 
-        products[index] = {
-            ...products[index],
-            name: name || products[index].name,
-            category: category || products[index].category,
-            size: size || products[index].size,
-            color: color || products[index].color,
-            condition: condition || products[index].condition,
-            price: price ? parseFloat(price) : products[index].price,
-            description: description || products[index].description,
-            location: location || products[index].location,
-            phone: phone || products[index].phone,
-            whatsapp: whatsapp || products[index].whatsapp,
+        const updates = {
+            name: name || product.name,
+            category: category || product.category,
+            size: size || product.size,
+            color: color || product.color,
+            condition: condition || product.condition,
+            price: price ? parseFloat(price) : product.price,
+            description: description || product.description,
+            location: location || product.location,
+            phone: phone || product.phone,
+            whatsapp: whatsapp || product.whatsapp,
             images,
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date()
         };
 
-        res.json({ message: 'Product updated!', product: products[index] });
+        if (useDB()) {
+            await Product.updateOne({ id: req.params.id }, updates);
+            product = await Product.findOne({ id: req.params.id });
+        } else {
+            const index = productsMemory.findIndex(p => p.id === req.params.id);
+            productsMemory[index] = { ...productsMemory[index], ...updates };
+            product = productsMemory[index];
+        }
+
+        res.json({ message: 'Product updated!', product });
     } catch (error) {
         console.error('Update product error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Update product status (available/sold)
-app.patch('/api/products/:id/status', (req, res) => {
+app.patch('/api/products/:id/status', async (req, res) => {
     try {
         const { status } = req.body;
         
@@ -392,32 +489,45 @@ app.patch('/api/products/:id/status', (req, res) => {
             return res.status(400).json({ error: 'Invalid status. Use "available" or "sold"' });
         }
         
-        const index = products.findIndex(p => p.id === req.params.id);
+        let product;
+        if (useDB()) {
+            await Product.updateOne({ id: req.params.id }, { status, updatedAt: new Date() });
+            product = await Product.findOne({ id: req.params.id });
+        } else {
+            const index = productsMemory.findIndex(p => p.id === req.params.id);
+            if (index === -1) {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+            productsMemory[index].status = status;
+            productsMemory[index].updatedAt = new Date();
+            product = productsMemory[index];
+        }
         
-        if (index === -1) {
+        if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
         
-        products[index].status = status;
-        products[index].updatedAt = new Date().toISOString();
-        
-        res.json({ message: `Product marked as ${status}!`, product: products[index] });
+        res.json({ message: `Product marked as ${status}!`, product });
     } catch (error) {
         console.error('Update status error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Delete product
-app.delete('/api/products/:id', (req, res) => {
+app.delete('/api/products/:id', async (req, res) => {
     try {
-        const index = products.findIndex(p => p.id === req.params.id);
-
-        if (index === -1) {
-            return res.status(404).json({ error: 'Product not found' });
+        if (useDB()) {
+            const result = await Product.deleteOne({ id: req.params.id });
+            if (result.deletedCount === 0) {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+        } else {
+            const index = productsMemory.findIndex(p => p.id === req.params.id);
+            if (index === -1) {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+            productsMemory.splice(index, 1);
         }
-
-        products.splice(index, 1);
 
         res.json({ message: 'Product deleted successfully!' });
     } catch (error) {
@@ -426,10 +536,14 @@ app.delete('/api/products/:id', (req, res) => {
     }
 });
 
-// Get products by seller
-app.get('/api/sellers/:sellerId/products', (req, res) => {
+app.get('/api/sellers/:sellerId/products', async (req, res) => {
     try {
-        const sellerProducts = products.filter(p => p.sellerId === req.params.sellerId);
+        let sellerProducts;
+        if (useDB()) {
+            sellerProducts = await Product.find({ sellerId: req.params.sellerId }).sort({ createdAt: -1 });
+        } else {
+            sellerProducts = productsMemory.filter(p => p.sellerId === req.params.sellerId);
+        }
         res.json(sellerProducts);
     } catch (error) {
         console.error('Get seller products error:', error);
@@ -437,15 +551,16 @@ app.get('/api/sellers/:sellerId/products', (req, res) => {
     }
 });
 
-// Increment product views
-app.post('/api/products/:id/view', (req, res) => {
+app.post('/api/products/:id/view', async (req, res) => {
     try {
-        const index = products.findIndex(p => p.id === req.params.id);
-
-        if (index !== -1) {
-            products[index].views = (products[index].views || 0) + 1;
+        if (useDB()) {
+            await Product.updateOne({ id: req.params.id }, { $inc: { views: 1 } });
+        } else {
+            const index = productsMemory.findIndex(p => p.id === req.params.id);
+            if (index !== -1) {
+                productsMemory[index].views = (productsMemory[index].views || 0) + 1;
+            }
         }
-
         res.json({ success: true });
     } catch (error) {
         console.error('View increment error:', error);
@@ -456,30 +571,38 @@ app.post('/api/products/:id/view', (req, res) => {
 // ==================== CATEGORIES ====================
 
 app.get('/api/categories', (req, res) => {
-    const categories = [
-        { id: 'dresses', name: 'Dresses', icon: '👗' },
-        { id: 'shirts', name: 'Shirts & Tops', icon: '👔' },
-        { id: 'pants', name: 'Pants & Jeans', icon: '👖' },
-        { id: 'shoes', name: 'Shoes', icon: '👟' },
-        { id: 'jackets', name: 'Jackets & Coats', icon: '🧥' },
-        { id: 'accessories', name: 'Accessories', icon: '👜' },
-        { id: 'traditional', name: 'Traditional Wear', icon: '🥻' },
-        { id: 'sportswear', name: 'Sportswear', icon: '🏃' },
-        { id: 'kids', name: 'Kids Fashion', icon: '👶' },
-        { id: 'other', name: 'Other', icon: '🛍️' }
-    ];
-    res.json(categories);
+    res.json([
+        { id: 'dresses', name: 'Dresses', icon: '' },
+        { id: 'shirts', name: 'Shirts & Tops', icon: '' },
+        { id: 'pants', name: 'Pants & Jeans', icon: '' },
+        { id: 'shoes', name: 'Shoes', icon: '' },
+        { id: 'jackets', name: 'Jackets & Coats', icon: '' },
+        { id: 'accessories', name: 'Accessories', icon: '' },
+        { id: 'traditional', name: 'Traditional Wear', icon: '' },
+        { id: 'sportswear', name: 'Sportswear', icon: '' },
+        { id: 'kids', name: 'Kids Fashion', icon: '' },
+        { id: 'other', name: 'Other', icon: '' }
+    ]);
 });
 
 // ==================== STATS ====================
 
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', async (req, res) => {
     try {
-        res.json({
-            totalProducts: products.length,
-            totalSellers: users.length,
-            totalViews: products.reduce((sum, p) => sum + (p.views || 0), 0)
-        });
+        let totalProducts, totalSellers, totalViews;
+        
+        if (useDB()) {
+            totalProducts = await Product.countDocuments();
+            totalSellers = await User.countDocuments();
+            const viewsResult = await Product.aggregate([{ $group: { _id: null, total: { $sum: '$views' } } }]);
+            totalViews = viewsResult[0]?.total || 0;
+        } else {
+            totalProducts = productsMemory.length;
+            totalSellers = usersMemory.length;
+            totalViews = productsMemory.reduce((sum, p) => sum + (p.views || 0), 0);
+        }
+        
+        res.json({ totalProducts, totalSellers, totalViews });
     } catch (error) {
         console.error('Stats error:', error);
         res.status(500).json({ error: 'Server error' });
@@ -489,40 +612,39 @@ app.get('/api/stats', (req, res) => {
 // ==================== HEALTH CHECK ====================
 
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ 
+        status: 'ok', 
+        database: useDB() ? 'connected' : 'in-memory',
+        timestamp: new Date().toISOString() 
+    });
 });
 
-// Serve main page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Handle all other routes - SPA style
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server (only when not in serverless environment)
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => {
         console.log(`
-    🇺🇬  ================================
-    🛒  ONLINE-SHOP-UGANDA
-    🇺🇬  ================================
+      ================================
+      ONLINE-SHOP-UGANDA
+      ================================
     
-    🚀 Server running on port: ${PORT}
-    📦 Ready to serve Uganda's fashion!
+     Server running on port: ${PORT}
+     Database: ${MONGODB_URI ? 'MongoDB' : 'In-Memory (not persistent)'}
     
     ================================
         `);
     });
 }
 
-// Export for Vercel
 module.exports = app;
