@@ -654,6 +654,28 @@ async function renderProductPage(productId) {
                                     </div>
                                 </div>
                             ` : ''}
+                            
+                            <!-- Seller Controls - Only show if logged in user is the seller -->
+                            ${currentUser && product.sellerId === currentUser.id ? `
+                                <div class="seller-controls">
+                                    <h4><i class="fas fa-cog"></i> Seller Controls</h4>
+                                    <div class="seller-controls-buttons">
+                                        <button class="btn-seller-status ${isSold ? 'btn-relist' : 'btn-mark-sold'}" 
+                                                onclick="toggleProductStatusFromDetail('${product.id}', '${product.status}')">
+                                            <i class="fas ${isSold ? 'fa-redo' : 'fa-check-circle'}"></i>
+                                            ${isSold ? 'Relist as Available' : 'Mark as Sold'}
+                                        </button>
+                                        <button class="btn-seller-edit" onclick="editProduct('${product.id}')">
+                                            <i class="fas fa-edit"></i>
+                                            Edit Item
+                                        </button>
+                                        <button class="btn-seller-delete" onclick="confirmDeleteProduct('${product.id}')">
+                                            <i class="fas fa-trash"></i>
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -885,6 +907,41 @@ async function toggleProductStatus(productId, currentStatus) {
         renderMyListingsPage();
     } catch (error) {
         showToast('Failed to update status', 'error');
+    }
+}
+
+// Toggle status from product detail page
+async function toggleProductStatusFromDetail(productId, currentStatus) {
+    const newStatus = currentStatus === 'sold' ? 'available' : 'sold';
+    
+    try {
+        await fetchAPI(`/api/products/${productId}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        showToast(`Item marked as ${newStatus}!`, 'success');
+        // Refresh the product detail page
+        renderProductPage(productId);
+    } catch (error) {
+        showToast('Failed to update status', 'error');
+    }
+}
+
+// Confirm delete from product detail page
+function confirmDeleteProduct(productId) {
+    if (!confirm('Are you sure you want to delete this item? This cannot be undone.')) return;
+    
+    deleteProductAndRedirect(productId);
+}
+
+async function deleteProductAndRedirect(productId) {
+    try {
+        await fetchAPI(`/api/products/${productId}`, { method: 'DELETE' });
+        showToast('Item deleted successfully!', 'success');
+        navigateTo('home');
+    } catch (error) {
+        showToast('Failed to delete item', 'error');
     }
 }
 
