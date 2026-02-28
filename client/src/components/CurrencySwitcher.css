@@ -1,0 +1,19 @@
+.currency-switcher {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  align-items: center;
+  margin: 18px 0 8px 0;
+}
+.currency {
+  color: #888;
+  font-size: 1.1em;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-bottom: 2px solid transparent;
+}
+.currency.active {
+  color: #d2691e;
+  border-bottom: 2px solid #d2691e;
+  font-weight: bold;
+}

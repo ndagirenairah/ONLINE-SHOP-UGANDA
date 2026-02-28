@@ -14,6 +14,12 @@ let currentPage = 'home';
 let editingProductId = null;
 let favorites = []; // Store favorite product IDs
 
+// Subscription & Payment State
+let subscriptionPlans = [];
+let featuredPrices = {};
+let currentPayment = null;
+let featureProductId = null;
+
 // ==========================================
 // INITIALIZATION
 // ==========================================
@@ -35,6 +41,7 @@ async function init() {
 
     // Load initial data
     await loadCategories();
+    await loadSubscriptionData();
     
     // Navigate to home page
     navigateTo('home');
@@ -55,6 +62,9 @@ async function init() {
             document.getElementById('userDropdown').classList.remove('active');
         }
     });
+    
+    // Setup payment method selection
+    setupPaymentMethodListeners();
 }
 
 // ==========================================
@@ -67,6 +77,9 @@ function navigateTo(page, data = null) {
     
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Update bottom nav active state
+    updateBottomNavActive(page);
     
     switch (page) {
         case 'home':
@@ -96,6 +109,37 @@ function navigateTo(page, data = null) {
             break;
         default:
             renderHomePage();
+    }
+}
+
+// Update bottom navigation active state
+function updateBottomNavActive(page) {
+    const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+    bottomNavItems.forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.page === page) {
+            item.classList.add('active');
+        }
+    });
+}
+
+// Handle account click in bottom nav
+function handleAccountClick() {
+    if (currentUser) {
+        // Show account menu or go to my listings
+        navigateTo('my-listings');
+    } else {
+        openModal('authModal');
+    }
+}
+
+// Update favorites count in bottom nav
+function updateBottomNavFavCount() {
+    const countEl = document.getElementById('bottomNavFavCount');
+    if (countEl) {
+        const count = favorites.length;
+        countEl.textContent = count;
+        countEl.style.display = count > 0 ? 'flex' : 'none';
     }
 }
 
@@ -157,6 +201,15 @@ async function loadProducts(filters = {}) {
     }
 }
 
+async function loadFeaturedProducts() {
+    try {
+        return await fetchAPI('/api/products/featured');
+    } catch (error) {
+        console.error('Failed to load featured products:', error);
+        return [];
+    }
+}
+
 // ==========================================
 // HOME PAGE
 // ==========================================
@@ -164,14 +217,33 @@ async function loadProducts(filters = {}) {
 async function renderHomePage() {
     const main = document.getElementById('mainContent');
     
-    // Load products
-    await loadProducts();
+    // Load products and featured products
+    const [allProducts, featuredProducts] = await Promise.all([
+        loadProducts(),
+        loadFeaturedProducts()
+    ]);
     
     // Get stats
     let stats = { totalProducts: products.length, totalSellers: 0, totalViews: 0 };
     try {
         stats = await fetchAPI('/api/stats');
     } catch (e) {}
+    
+    // Build featured section HTML
+    const featuredSectionHtml = featuredProducts.length > 0 ? `
+        <!-- Featured Products Section -->
+        <section class="featured-section">
+            <div class="container">
+                <div class="section-header-bar">
+                    <h2><i class="fas fa-rocket"></i> Featured Items</h2>
+                    <span>${featuredProducts.length} boosted</span>
+                </div>
+                <div class="products-grid section-content-box">
+                    ${renderProductCards(featuredProducts)}
+                </div>
+            </div>
+        </section>
+    ` : '';
     
     main.innerHTML = `
         <!-- Hero Section -->
@@ -266,6 +338,8 @@ async function renderHomePage() {
             </div>
         </section>
 
+        ${featuredSectionHtml}
+
         <!-- Products Section -->
         <section class="products-section" id="productsSection">
             <div class="container">
@@ -332,7 +406,7 @@ async function renderHomePage() {
     `;
 }
 
-function renderProductCards(productList) {
+function renderProductCards(productList, showBoostButton = false) {
     if (!productList || productList.length === 0) {
         return `
             <div class="empty-state">
@@ -349,13 +423,22 @@ function renderProductCards(productList) {
     return productList.map(product => {
         const isNew = isRecentlyPosted(product.createdAt);
         const status = product.status || 'available';
+        const isFeatured = product.isFeatured && product.featuredUntil && new Date(product.featuredUntil) > new Date();
+        const boostLevel = product.boostLevel || 'none';
+        
         return `
-        <div class="product-card ${status === 'sold' ? 'sold-item' : ''}" onclick="viewProduct('${product.id}')">
+        <div class="product-card ${status === 'sold' ? 'sold-item' : ''} ${isFeatured ? 'featured-product' : ''}" onclick="viewProduct('${product.id}')">
             <div class="product-image">
                 <img src="${product.images[0] || 'https://via.placeholder.com/300x300?text=No+Image'}" 
                      alt="${product.name}"
                      onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
-                ${isNew ? '<span class="new-arrival-badge"><i class="fas fa-bolt"></i> NEW</span>' : ''}
+                ${isFeatured ? `
+                    <span class="featured-badge ${boostLevel}">
+                        <i class="fas ${boostLevel === 'spotlight' ? 'fa-crown' : boostLevel === 'premium' ? 'fa-fire' : 'fa-bolt'}"></i>
+                        ${boostLevel === 'spotlight' ? 'SPOTLIGHT' : boostLevel === 'premium' ? 'FEATURED' : 'BOOSTED'}
+                    </span>
+                ` : ''}
+                ${isNew && !isFeatured ? '<span class="new-arrival-badge"><i class="fas fa-bolt"></i> NEW</span>' : ''}
                 <span class="product-badge ${product.condition !== 'new' ? 'used' : ''}">
                     ${product.condition === 'new' ? 'Brand New' : product.condition}
                 </span>
@@ -383,6 +466,11 @@ function renderProductCards(productList) {
                         <i class="fas fa-map-marker-alt"></i> ${product.location}
                     </span>
                 </div>
+                ${showBoostButton && currentUser && product.sellerId === currentUser.id && !isFeatured && status !== 'sold' ? `
+                    <button class="btn-boost-listing" onclick="event.stopPropagation(); openFeatureModal('${product.id}')">
+                        <i class="fas fa-rocket"></i> Boost
+                    </button>
+                ` : ''}
             </div>
         </div>
     `}).join('');
@@ -797,24 +885,63 @@ function requestDelivery(productId) {
 async function renderMyListingsPage() {
     const main = document.getElementById('mainContent');
     
-    // Load user's products
+    // Load user's products and subscription info
     let userProducts = [];
+    let subInfo = { subscription: { plan: 'free' }, plan: { features: { maxListings: 3 } } };
+    
     try {
-        userProducts = await fetchAPI(`/api/sellers/${currentUser.id}/products`);
+        [userProducts, subInfo] = await Promise.all([
+            fetchAPI(`/api/sellers/${currentUser.id}/products`),
+            getUserSubscriptionInfo()
+        ]);
     } catch (error) {
-        console.error('Failed to load user products:', error);
+        console.error('Failed to load user data:', error);
     }
     
     const totalViews = userProducts.reduce((sum, p) => sum + (p.views || 0), 0);
+    const featuredCount = userProducts.filter(p => p.isFeatured && new Date(p.featuredUntil) > new Date()).length;
+    const maxListings = subInfo.plan?.features?.maxListings || 3;
+    const listingsRemaining = maxListings === -1 ? '∞' : Math.max(0, maxListings - userProducts.length);
     
     main.innerHTML = `
         <section class="my-listings-page">
             <div class="container">
                 <div class="page-header">
                     <h1><i class="fas fa-store"></i> My Listings</h1>
-                    <button class="btn btn-primary" onclick="openModal('postItemModal')">
+                    <button class="btn btn-primary" onclick="checkAuthAndPost()">
                         <i class="fas fa-plus"></i> Add New Item
                     </button>
+                </div>
+                
+                <!-- Subscription Card -->
+                <div class="subscription-card ${subInfo.subscription?.plan !== 'free' ? 'premium' : ''}">
+                    <div class="subscription-card-header">
+                        <h3><i class="fas fa-crown"></i> Your Plan</h3>
+                        <span class="plan-badge ${subInfo.subscription?.plan || 'free'}">${subInfo.plan?.name || 'Free'}</span>
+                    </div>
+                    <div class="subscription-info">
+                        <div class="subscription-info-item">
+                            <label>Listings Used</label>
+                            <span>${userProducts.length}/${maxListings === -1 ? '∞' : maxListings}</span>
+                        </div>
+                        <div class="subscription-info-item">
+                            <label>Featured Active</label>
+                            <span>${featuredCount}</span>
+                        </div>
+                        <div class="subscription-info-item">
+                            <label>Total Views</label>
+                            <span>${totalViews}</span>
+                        </div>
+                        <div class="subscription-info-item">
+                            <label>Remaining</label>
+                            <span>${listingsRemaining}</span>
+                        </div>
+                    </div>
+                    <div class="subscription-actions">
+                        <button class="btn btn-primary" onclick="openSubscriptionModal()">
+                            <i class="fas fa-arrow-up"></i> ${subInfo.subscription?.plan === 'free' ? 'Upgrade Plan' : 'Change Plan'}
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Stats -->
@@ -855,12 +982,14 @@ async function renderMyListingsPage() {
                     ` : userProducts.map(product => {
                         const status = product.status || 'available';
                         const isNew = isRecentlyPosted(product.createdAt);
+                        const isFeatured = product.isFeatured && product.featuredUntil && new Date(product.featuredUntil) > new Date();
                         return `
-                        <div class="listing-item ${status === 'sold' ? 'sold' : ''}">
+                        <div class="listing-item ${status === 'sold' ? 'sold' : ''} ${isFeatured ? 'featured' : ''}">
                             <div class="listing-image-wrapper">
                                 <img src="${product.images[0] || 'https://via.placeholder.com/120x100?text=No+Image'}" 
                                      alt="${product.name}">
-                                ${isNew ? '<span class="new-tag">NEW</span>' : ''}
+                                ${isFeatured ? '<span class="featured-tag"><i class="fas fa-rocket"></i> BOOSTED</span>' : ''}
+                                ${isNew && !isFeatured ? '<span class="new-tag">NEW</span>' : ''}
                             </div>
                             <div class="listing-info">
                                 <h3>${product.name}</h3>
@@ -875,6 +1004,16 @@ async function renderMyListingsPage() {
                                 </div>
                             </div>
                             <div class="listing-actions">
+                                ${status !== 'sold' && !isFeatured ? `
+                                    <button class="btn-boost" onclick="openFeatureModal('${product.id}')">
+                                        <i class="fas fa-rocket"></i> Boost
+                                    </button>
+                                ` : ''}
+                                ${isFeatured ? `
+                                    <button class="btn-boost boosted" disabled>
+                                        <i class="fas fa-check"></i> Boosted
+                                    </button>
+                                ` : ''}
                                 <button class="btn-status ${status}" onclick="toggleProductStatus('${product.id}', '${status}')" title="${status === 'sold' ? 'Mark as Available' : 'Mark as Sold'}">
                                     <i class="fas ${status === 'sold' ? 'fa-undo' : 'fa-check'}"></i>
                                     ${status === 'sold' ? 'Relist' : 'Mark Sold'}
@@ -1263,6 +1402,9 @@ function updateAuthUI() {
             <a href="#" onclick="navigateTo('my-listings'); closeUserDropdown(); return false;">
                 <i class="fas fa-store"></i> My Listings
             </a>
+            <a href="#" onclick="openSubscriptionModal(); closeUserDropdown(); return false;">
+                <i class="fas fa-crown"></i> Subscription
+            </a>
             <a href="#" onclick="navigateTo('home'); closeUserDropdown(); return false;">
                 <i class="fas fa-home"></i> Home
             </a>
@@ -1272,6 +1414,9 @@ function updateAuthUI() {
         `;
         
         mobileAuth.innerHTML = `
+            <button class="btn btn-primary btn-block" onclick="openSubscriptionModal(); closeMobileMenu();" style="margin-bottom: 10px;">
+                <i class="fas fa-crown"></i> Upgrade Plan
+            </button>
             <button class="btn btn-secondary btn-block" onclick="logout(); closeMobileMenu();">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </button>
@@ -1298,14 +1443,7 @@ function updateAuthUI() {
     }
 }
 
-function checkAuthAndPost() {
-    if (!currentUser) {
-        openModal('authModal');
-        showToast('Please login or register to post items', 'warning');
-        return;
-    }
-    openModal('postItemModal');
-}
+// checkAuthAndPost is now in the SUBSCRIPTION & PAYMENT SYSTEM section
 
 function toggleUserDropdown() {
     document.getElementById('userDropdown').classList.toggle('active');
@@ -1554,6 +1692,9 @@ function updateFavoritesCount() {
         el.textContent = favorites.length;
         el.style.display = favorites.length > 0 ? 'flex' : 'none';
     });
+    
+    // Also update bottom nav favorites count
+    updateBottomNavFavCount();
 }
 
 async function viewFavorites() {
@@ -1668,6 +1809,485 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ==========================================
+// SUBSCRIPTION & PAYMENT SYSTEM
+// ==========================================
+
+async function loadSubscriptionData() {
+    try {
+        const [plans, prices] = await Promise.all([
+            fetchAPI('/api/subscription-plans'),
+            fetchAPI('/api/featured-prices')
+        ]);
+        subscriptionPlans = plans;
+        featuredPrices = prices;
+    } catch (error) {
+        console.log('Could not load subscription data:', error);
+        // Use defaults
+        subscriptionPlans = [];
+        featuredPrices = {
+            basic: { price: 5000, duration: 3, label: '3 Days Basic' },
+            premium: { price: 15000, duration: 7, label: '7 Days Premium' },
+            spotlight: { price: 35000, duration: 14, label: '14 Days Spotlight' }
+        };
+    }
+}
+
+function setupPaymentMethodListeners() {
+    document.querySelectorAll('.payment-method-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.payment-method-option').forEach(o => o.classList.remove('active'));
+            this.classList.add('active');
+            this.querySelector('input').checked = true;
+        });
+    });
+}
+
+// Open subscription modal
+async function openSubscriptionModal() {
+    if (!currentUser) {
+        openModal('authModal');
+        showToast('Please login to view subscription plans', 'warning');
+        return;
+    }
+    
+    // Load user's current subscription
+    let userSub = { subscription: { plan: 'free' }, plan: subscriptionPlans[0] };
+    try {
+        userSub = await fetchAPI(`/api/subscription/${currentUser.id}`);
+    } catch (e) {}
+    
+    const plansHtml = subscriptionPlans.map(plan => {
+        const isCurrent = userSub.subscription?.plan === plan.id;
+        const isPopular = plan.id === 'premium';
+        const features = plan.features || {};
+        
+        return `
+            <div class="plan-card ${isPopular ? 'popular' : ''} ${isCurrent ? 'current' : ''}" data-plan-id="${plan.id}">
+                <div class="plan-name">${plan.name}</div>
+                <div class="plan-price ${plan.price === 0 ? 'free' : ''}">
+                    <span class="amount">${plan.price === 0 ? 'FREE' : 'UGX ' + formatPrice(plan.price)}</span>
+                    ${plan.price > 0 ? `<span class="period">/ month</span>` : ''}
+                </div>
+                <div class="plan-features">
+                    <div class="plan-feature ${features.maxListings !== 0 ? '' : 'disabled'}">
+                        <i class="fas ${features.maxListings !== 0 ? 'fa-check' : 'fa-times'}"></i>
+                        ${features.maxListings === -1 ? 'Unlimited' : features.maxListings} listings
+                    </div>
+                    <div class="plan-feature ${features.featuredListingsPerMonth > 0 ? '' : 'disabled'}">
+                        <i class="fas ${features.featuredListingsPerMonth > 0 ? 'fa-check' : 'fa-times'}"></i>
+                        ${features.featuredListingsPerMonth === -1 ? 'Unlimited' : features.featuredListingsPerMonth} featured/month
+                    </div>
+                    <div class="plan-feature ${features.analytics ? '' : 'disabled'}">
+                        <i class="fas ${features.analytics ? 'fa-check' : 'fa-times'}"></i>
+                        Sales analytics
+                    </div>
+                    <div class="plan-feature ${features.verifiedBadge ? '' : 'disabled'}">
+                        <i class="fas ${features.verifiedBadge ? 'fa-check' : 'fa-times'}"></i>
+                        Verified badge
+                    </div>
+                    <div class="plan-feature ${features.prioritySupport ? '' : 'disabled'}">
+                        <i class="fas ${features.prioritySupport ? 'fa-check' : 'fa-times'}"></i>
+                        Priority support
+                    </div>
+                </div>
+                <button class="plan-btn ${isCurrent ? 'secondary' : 'primary'}" 
+                        onclick="${isCurrent ? '' : `selectPlan('${plan.id}', ${plan.price})`}"
+                        ${isCurrent ? 'disabled' : ''}>
+                    ${isCurrent ? 'Current Plan' : (plan.price === 0 ? 'Start Free' : 'Upgrade')}
+                </button>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('subscriptionPlans').innerHTML = plansHtml;
+    openModal('subscriptionModal');
+}
+
+// Select a plan and proceed to payment
+function selectPlan(planId, price) {
+    if (price === 0) {
+        // Free plan - activate directly
+        activateFreePlan();
+        return;
+    }
+    
+    const plan = subscriptionPlans.find(p => p.id === planId);
+    currentPayment = {
+        type: 'subscription',
+        planId: planId,
+        amount: price,
+        planName: plan?.name || planId
+    };
+    
+    document.getElementById('paymentDescription').textContent = `Subscribe to ${plan?.name || planId}`;
+    document.getElementById('paymentAmount').textContent = formatPrice(price);
+    
+    // Pre-fill phone if user has one
+    if (currentUser?.phone) {
+        document.getElementById('paymentPhone').value = currentUser.phone;
+    }
+    
+    closeModal('subscriptionModal');
+    openModal('paymentModal');
+}
+
+async function activateFreePlan() {
+    try {
+        await fetchAPI('/api/payments/subscribe', {
+            method: 'POST',
+            body: JSON.stringify({
+                userId: currentUser.id,
+                planId: 'free',
+                paymentMethod: 'mtn_momo'
+            })
+        });
+        
+        closeModal('subscriptionModal');
+        showToast('Free plan activated! You can now list up to 3 items.', 'success');
+        
+        // Refresh user data
+        await refreshUserData();
+    } catch (error) {
+        showToast('Error activating plan', 'error');
+    }
+}
+
+// Open feature listing modal
+async function openFeatureModal(productId) {
+    if (!currentUser) {
+        openModal('authModal');
+        showToast('Please login to boost your listing', 'warning');
+        return;
+    }
+    
+    featureProductId = productId;
+    
+    // Get product details for preview
+    try {
+        const product = await fetchAPI(`/api/products/${productId}`);
+        document.getElementById('featureProductPreview').innerHTML = `
+            <img src="${product.images[0] || 'https://via.placeholder.com/70'}" alt="${product.name}">
+            <div class="preview-info">
+                <h4>${product.name}</h4>
+                <p>UGX ${formatPrice(product.price)}</p>
+            </div>
+        `;
+    } catch (e) {
+        document.getElementById('featureProductPreview').innerHTML = '';
+    }
+    
+    openModal('featureModal');
+}
+
+function proceedToFeaturePayment() {
+    const selectedLevel = document.querySelector('input[name="boostLevel"]:checked')?.value || 'basic';
+    const pricing = featuredPrices[selectedLevel];
+    
+    if (!pricing) {
+        showToast('Please select a boost level', 'warning');
+        return;
+    }
+    
+    currentPayment = {
+        type: 'featured_listing',
+        productId: featureProductId,
+        boostLevel: selectedLevel,
+        amount: pricing.price,
+        duration: pricing.duration
+    };
+    
+    document.getElementById('paymentDescription').textContent = `${pricing.label} Boost`;
+    document.getElementById('paymentAmount').textContent = formatPrice(pricing.price);
+    
+    if (currentUser?.phone) {
+        document.getElementById('paymentPhone').value = currentUser.phone;
+    }
+    
+    closeModal('featureModal');
+    openModal('paymentModal');
+}
+
+// Process payment
+async function processPayment() {
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+    const phoneNumber = document.getElementById('paymentPhone').value.trim();
+    
+    if (!phoneNumber) {
+        showToast('Please enter your mobile money number', 'warning');
+        return;
+    }
+    
+    if (!paymentMethod) {
+        showToast('Please select a payment method', 'warning');
+        return;
+    }
+    
+    const btn = document.getElementById('confirmPaymentBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    btn.disabled = true;
+    
+    try {
+        let endpoint = currentPayment.type === 'subscription' 
+            ? '/api/payments/subscribe' 
+            : '/api/payments/feature';
+        
+        const payload = {
+            userId: currentUser.id,
+            paymentMethod,
+            phoneNumber,
+            ...(currentPayment.type === 'subscription' 
+                ? { planId: currentPayment.planId }
+                : { productId: currentPayment.productId, boostLevel: currentPayment.boostLevel }
+            )
+        };
+        
+        const response = await fetchAPI(endpoint, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        
+        if (response.success) {
+            currentPayment.paymentId = response.payment.id;
+            currentPayment.ref = response.payment.ref;
+            currentPayment.instructions = response.instructions;
+            currentPayment.simulated = response.payment.simulated || false;
+            
+            closeModal('paymentModal');
+            showPaymentInstructions(response.instructions, response.payment.ref, response.payment.simulated);
+            
+            if (response.message) {
+                showToast(response.message, 'info');
+            }
+        } else {
+            throw new Error(response.error || 'Payment initiation failed');
+        }
+    } catch (error) {
+        showToast(error.message || 'Payment failed', 'error');
+    } finally {
+        btn.innerHTML = '<i class="fas fa-lock"></i> Pay Now';
+        btn.disabled = false;
+    }
+}
+
+function showPaymentInstructions(instructions, ref, isSimulated = false) {
+    document.getElementById('paymentRefDisplay').textContent = ref;
+    
+    // Update help link with reference
+    document.getElementById('paymentHelpLink').href = 
+        `https://wa.me/256700518006?text=Hi! I need help with payment ref: ${ref}`;
+    
+    const stepsHtml = instructions.steps.map((step, i) => `
+        <div class="instruction-step">
+            <span class="step-number">${i + 1}</span>
+            <span class="step-text">${step}</span>
+        </div>
+    `).join('');
+    
+    document.getElementById('instructionsSteps').innerHTML = stepsHtml;
+    
+    // Add simulate button for sandbox/testing mode
+    const actionsDiv = document.querySelector('#paymentInstructionsModal .modal-content');
+    let simulateBtn = document.getElementById('simulatePaymentBtn');
+    if (isSimulated && !simulateBtn) {
+        const btnHtml = `
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ffc107;">
+                <p style="color: #ffc107; font-size: 12px; margin-bottom: 10px;">
+                    <i class="fas fa-flask"></i> SANDBOX MODE - For testing only
+                </p>
+                <button id="simulatePaymentBtn" onclick="simulatePaymentSuccess()" class="btn btn-warning" style="width: 100%;">
+                    <i class="fas fa-magic"></i> Simulate Successful Payment
+                </button>
+            </div>
+        `;
+        const checkBtn = document.querySelector('#paymentInstructionsModal .btn-primary');
+        if (checkBtn) {
+            checkBtn.insertAdjacentHTML('afterend', btnHtml);
+        }
+    }
+    
+    openModal('paymentInstructionsModal');
+    
+    // Start auto-polling for payment status
+    startPaymentPolling();
+}
+
+function copyPaymentRef() {
+    const ref = document.getElementById('paymentRefDisplay').textContent;
+    navigator.clipboard.writeText(ref).then(() => {
+        showToast('Reference copied!', 'success');
+    }).catch(() => {
+        showToast('Could not copy reference', 'error');
+    });
+}
+
+let paymentPollInterval = null;
+
+async function checkPaymentStatus(isAutoPolling = false) {
+    if (!currentPayment?.paymentId) {
+        showToast('No active payment', 'error');
+        return;
+    }
+    
+    const icon = document.querySelector('.instructions-icon');
+    if (!isAutoPolling) {
+        icon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+    
+    try {
+        // Poll payment status from server
+        const response = await fetchAPI(`/api/payments/${currentPayment.paymentId}/poll`);
+        
+        if (response.status === 'completed') {
+            // Stop polling
+            stopPaymentPolling();
+            
+            icon.className = 'instructions-icon success';
+            icon.innerHTML = '<i class="fas fa-check"></i>';
+            
+            setTimeout(() => {
+                closeModal('paymentInstructionsModal');
+                showToast('🎉 Payment successful! Benefits activated.', 'success');
+                
+                // Refresh user data and current page
+                refreshUserData();
+                if (currentPage === 'my-listings') {
+                    renderMyListingsPage();
+                } else {
+                    navigateTo('home');
+                }
+            }, 1500);
+        } else if (response.status === 'failed') {
+            // Stop polling
+            stopPaymentPolling();
+            
+            icon.className = 'instructions-icon error';
+            icon.innerHTML = '<i class="fas fa-times"></i>';
+            showToast('Payment failed. Please try again.', 'error');
+        } else if (!isAutoPolling) {
+            // Manual check - still pending
+            showToast('Payment not yet received. Please complete payment on your phone.', 'warning');
+        }
+    } catch (error) {
+        if (!isAutoPolling) {
+            icon.className = 'instructions-icon processing';
+            icon.innerHTML = '<i class="fas fa-clock"></i>';
+            showToast('Could not check payment status. Please try again.', 'error');
+        }
+    }
+}
+
+function startPaymentPolling() {
+    // Poll every 5 seconds
+    stopPaymentPolling(); // Clear any existing interval
+    paymentPollInterval = setInterval(() => {
+        checkPaymentStatus(true);
+    }, 5000);
+}
+
+function stopPaymentPolling() {
+    if (paymentPollInterval) {
+        clearInterval(paymentPollInterval);
+        paymentPollInterval = null;
+    }
+}
+
+// Simulate payment for testing (in sandbox mode)
+async function simulatePaymentSuccess() {
+    if (!currentPayment?.paymentId) {
+        showToast('No active payment', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetchAPI(`/api/payments/${currentPayment.paymentId}/simulate-success`, {
+            method: 'POST'
+        });
+        
+        if (response.success) {
+            stopPaymentPolling();
+            
+            const icon = document.querySelector('.instructions-icon');
+            icon.className = 'instructions-icon success';
+            icon.innerHTML = '<i class="fas fa-check"></i>';
+            
+            setTimeout(() => {
+                closeModal('paymentInstructionsModal');
+                showToast('🎉 Payment simulated! Benefits activated.', 'success');
+                
+                refreshUserData();
+                if (currentPage === 'my-listings') {
+                    renderMyListingsPage();
+                } else {
+                    navigateTo('home');
+                }
+            }, 1000);
+        }
+    } catch (error) {
+        showToast('Simulation failed', 'error');
+    }
+}
+
+async function refreshUserData() {
+    if (!currentUser) return;
+    
+    try {
+        const userData = await fetchAPI(`/api/auth/user/${currentUser.id}`);
+        currentUser = { ...currentUser, ...userData };
+        localStorage.setItem('onlineshopug_user', JSON.stringify(currentUser));
+        updateAuthUI();
+    } catch (e) {}
+}
+
+// Get user's subscription info for display
+async function getUserSubscriptionInfo() {
+    if (!currentUser) return null;
+    
+    try {
+        return await fetchAPI(`/api/subscription/${currentUser.id}`);
+    } catch (e) {
+        return { subscription: { plan: 'free', status: 'active' } };
+    }
+}
+
+// Check if user can list more products
+async function canUserListMore() {
+    if (!currentUser) return false;
+    
+    try {
+        const subInfo = await getUserSubscriptionInfo();
+        const maxListings = subInfo.plan?.features?.maxListings || 3;
+        
+        // -1 means unlimited
+        if (maxListings === -1) return true;
+        
+        const userProducts = await fetchAPI(`/api/sellers/${currentUser.id}/products`);
+        return userProducts.length < maxListings;
+    } catch (e) {
+        return true; // Allow on error
+    }
+}
+
+// Check listing limit before posting
+async function checkAuthAndPost() {
+    if (!currentUser) {
+        openModal('authModal');
+        showToast('Please login or register to post items', 'warning');
+        return;
+    }
+    
+    // Check if user can list more
+    const canList = await canUserListMore();
+    
+    if (!canList) {
+        showToast('You\'ve reached your listing limit! Upgrade your plan for more listings.', 'warning');
+        openSubscriptionModal();
+        return;
+    }
+    
+    openModal('postItemModal');
+}
+
+// ==========================================
 // EXPOSE FUNCTIONS TO GLOBAL SCOPE
 // ==========================================
 
@@ -1701,3 +2321,19 @@ window.viewFavorites = viewFavorites;
 window.clearAllFavorites = clearAllFavorites;
 window.isInFavorites = isInFavorites;
 window.updateDetailFavoriteBtn = updateDetailFavoriteBtn;
+
+// Subscription & Payment exports
+window.openSubscriptionModal = openSubscriptionModal;
+window.selectPlan = selectPlan;
+window.openFeatureModal = openFeatureModal;
+window.proceedToFeaturePayment = proceedToFeaturePayment;
+window.processPayment = processPayment;
+window.copyPaymentRef = copyPaymentRef;
+window.checkPaymentStatus = checkPaymentStatus;
+window.simulatePaymentSuccess = simulatePaymentSuccess;
+window.stopPaymentPolling = stopPaymentPolling;
+
+// Bottom navigation exports
+window.handleAccountClick = handleAccountClick;
+window.updateBottomNavActive = updateBottomNavActive;
+window.updateBottomNavFavCount = updateBottomNavFavCount;

@@ -1,0 +1,36 @@
+.carousel-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 8px;
+  margin: 24px 0 12px 0;
+  position: relative;
+  min-height: 220px;
+}
+.carousel-img {
+  width: 900px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.carousel-arrow {
+  background: #ff0000;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5em;
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+.carousel-arrow.left {
+  left: 10px;
+}
+.carousel-arrow.right {
+  right: 10px;
+}

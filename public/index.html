@@ -405,6 +405,239 @@
     <!-- Toast Notifications -->
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- Subscription Modal -->
+    <div class="modal" id="subscriptionModal">
+        <div class="modal-overlay" onclick="closeModal('subscriptionModal')"></div>
+        <div class="modal-content subscription-modal">
+            <button class="modal-close" onclick="closeModal('subscriptionModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="subscription-header">
+                <div class="subscription-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <h2>Upgrade Your Shop</h2>
+                <p>Choose a plan to grow your business</p>
+            </div>
+            
+            <div class="subscription-plans" id="subscriptionPlans">
+                <!-- Plans loaded dynamically -->
+            </div>
+            
+            <div class="subscription-benefits">
+                <h4><i class="fas fa-check-circle"></i> Why Upgrade?</h4>
+                <ul>
+                    <li><i class="fas fa-box"></i> List more items for sale</li>
+                    <li><i class="fas fa-star"></i> Feature your items at the top</li>
+                    <li><i class="fas fa-chart-line"></i> Get sales analytics</li>
+                    <li><i class="fas fa-certificate"></i> Verified seller badge</li>
+                    <li><i class="fas fa-headset"></i> Priority customer support</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-overlay" onclick="closeModal('paymentModal')"></div>
+        <div class="modal-content payment-modal">
+            <button class="modal-close" onclick="closeModal('paymentModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="payment-header">
+                <div class="payment-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h2>Complete Payment</h2>
+                <p id="paymentDescription">Pay with Mobile Money</p>
+            </div>
+            
+            <div class="payment-amount">
+                <span class="currency">UGX</span>
+                <span class="amount" id="paymentAmount">0</span>
+            </div>
+            
+            <div class="payment-methods">
+                <h4>Select Payment Method</h4>
+                <div class="payment-method-options">
+                    <label class="payment-method-option active" data-method="mtn_momo">
+                        <input type="radio" name="paymentMethod" value="mtn_momo" checked>
+                        <div class="method-content">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/New-mtn-logo.svg/120px-New-mtn-logo.svg.png" alt="MTN" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 50%22><rect fill=%22%23ffcc00%22 width=%22100%22 height=%2250%22 rx=%225%22/><text x=%2250%22 y=%2235%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22%23000%22>MTN</text></svg>'">
+                            <span>MTN MoMo</span>
+                        </div>
+                    </label>
+                    <label class="payment-method-option" data-method="airtel_money">
+                        <input type="radio" name="paymentMethod" value="airtel_money">
+                        <div class="method-content">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Airtel_logo.svg/120px-Airtel_logo.svg.png" alt="Airtel" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 50%22><rect fill=%22%23ed1c24%22 width=%22100%22 height=%2250%22 rx=%225%22/><text x=%2250%22 y=%2235%22 font-size=%2216%22 text-anchor=%22middle%22 fill=%22%23fff%22>AIRTEL</text></svg>'">
+                            <span>Airtel Money</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="payment-phone">
+                <label><i class="fas fa-phone"></i> Mobile Money Number</label>
+                <input type="tel" id="paymentPhone" placeholder="+256 7XX XXX XXX" required>
+            </div>
+            
+            <button class="btn btn-primary btn-block btn-lg" id="confirmPaymentBtn" onclick="processPayment()">
+                <i class="fas fa-lock"></i> Pay Now
+            </button>
+            
+            <div class="payment-security">
+                <i class="fas fa-shield-alt"></i>
+                <span>Your payment is secure and encrypted</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Instructions Modal -->
+    <div class="modal" id="paymentInstructionsModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content instructions-modal">
+            <div class="instructions-header">
+                <div class="instructions-icon processing">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <h2>Complete Your Payment</h2>
+                <p>Follow these steps on your phone</p>
+            </div>
+            
+            <div class="payment-reference">
+                <span>Payment Reference:</span>
+                <strong id="paymentRefDisplay">OSU-XXXXXX</strong>
+                <button class="btn-copy" onclick="copyPaymentRef()">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            
+            <div class="instructions-steps" id="instructionsSteps">
+                <!-- Steps loaded dynamically -->
+            </div>
+            
+            <div class="instructions-actions">
+                <button class="btn btn-primary btn-block" onclick="checkPaymentStatus()">
+                    <i class="fas fa-check-circle"></i> I've Completed Payment
+                </button>
+                <button class="btn btn-secondary btn-block" onclick="closeModal('paymentInstructionsModal')">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+            
+            <div class="instructions-help">
+                <p>Having trouble? <a href="https://wa.me/256700518006?text=Hi! I need help with payment ref: " target="_blank" id="paymentHelpLink">Contact Support</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Listing Modal -->
+    <div class="modal" id="featureModal">
+        <div class="modal-overlay" onclick="closeModal('featureModal')"></div>
+        <div class="modal-content feature-modal">
+            <button class="modal-close" onclick="closeModal('featureModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="feature-header">
+                <div class="feature-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <h2>Boost Your Listing</h2>
+                <p>Get more visibility and sell faster!</p>
+            </div>
+            
+            <div class="feature-product-preview" id="featureProductPreview">
+                <!-- Product preview loaded dynamically -->
+            </div>
+            
+            <div class="feature-options">
+                <label class="feature-option" data-level="basic">
+                    <input type="radio" name="boostLevel" value="basic" checked>
+                    <div class="option-content">
+                        <div class="option-badge basic">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="option-info">
+                            <h4>Basic Boost</h4>
+                            <p>3 days • Top of category</p>
+                        </div>
+                        <div class="option-price">
+                            <span>UGX 5,000</span>
+                        </div>
+                    </div>
+                </label>
+                
+                <label class="feature-option recommended" data-level="premium">
+                    <input type="radio" name="boostLevel" value="premium">
+                    <div class="option-content">
+                        <span class="recommended-badge">BEST VALUE</span>
+                        <div class="option-badge premium">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="option-info">
+                            <h4>Premium Boost</h4>
+                            <p>7 days • Homepage featured</p>
+                        </div>
+                        <div class="option-price">
+                            <span>UGX 15,000</span>
+                        </div>
+                    </div>
+                </label>
+                
+                <label class="feature-option" data-level="spotlight">
+                    <input type="radio" name="boostLevel" value="spotlight">
+                    <div class="option-content">
+                        <div class="option-badge spotlight">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <div class="option-info">
+                            <h4>Spotlight</h4>
+                            <p>14 days • Maximum exposure</p>
+                        </div>
+                        <div class="option-price">
+                            <span>UGX 35,000</span>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            
+            <button class="btn btn-primary btn-block btn-lg" onclick="proceedToFeaturePayment()">
+                <i class="fas fa-rocket"></i> Boost This Listing
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar (Jumia Style) -->
+    <nav class="bottom-nav" id="bottomNav">
+        <a href="#" class="bottom-nav-item active" onclick="navigateTo('home'); return false;" data-page="home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="navigateTo('categories'); return false;" data-page="categories">
+            <i class="fas fa-th-large"></i>
+            <span>Categories</span>
+        </a>
+        <a href="#" class="bottom-nav-item sell-btn" onclick="checkAuthAndPost(); return false;">
+            <div class="sell-icon">
+                <i class="fas fa-plus"></i>
+            </div>
+            <span>Sell</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="viewFavorites(); return false;" data-page="favorites">
+            <i class="fas fa-heart"></i>
+            <span>Wishlist</span>
+            <span class="nav-badge favorites-count" id="bottomNavFavCount">0</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="handleAccountClick(); return false;" data-page="account">
+            <i class="fas fa-user"></i>
+            <span>Account</span>
+        </a>
+    </nav>
+
     <!-- Scripts -->
     <script src="js/app.js"></script>
 </body>
