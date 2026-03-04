@@ -1,66 +1,88 @@
 .reviews-section {
-  background: #fff;
-  border-radius: 8px;
-  margin: 32px 0 0 0;
-  padding: 24px 0 32px 0;
+  background: #fafafa;
+  margin: 0;
+  padding: 60px 40px;
   text-align: center;
 }
+
 .reviews-section h2 {
-  font-size: 1.3em;
-  margin-bottom: 18px;
-  color: #222;
+  font-size: 1.5em;
+  margin-bottom: 30px;
+  color: #000;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
+
 .reviews-list {
   display: flex;
   justify-content: center;
-  gap: 32px;
+  gap: 30px;
   flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
 }
+
 .review-card {
-  background: #f8f8f8;
-  border-radius: 8px;
-  padding: 18px 24px;
-  min-width: 260px;
-  max-width: 320px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  padding: 24px;
+  min-width: 280px;
+  max-width: 350px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
+
+.review-card:hover {
+  border-color: #000;
+}
+
 .review-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
+
 .review-avatar {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #ffa600;
+  border: 2px solid #000;
+  filter: grayscale(100%);
 }
+
 .review-name {
-  font-weight: bold;
+  font-weight: 600;
   font-size: 1em;
+  color: #000;
 }
+
 .verified {
-  color: #1e90ff;
-  font-size: 1em;
-  margin-left: 2px;
+  color: #000;
+  font-size: 0.9em;
+  margin-left: 4px;
 }
+
 .review-platform {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   margin-left: 6px;
+  filter: grayscale(100%);
 }
+
 .review-rating {
-  color: #ffc107;
-  font-size: 1.1em;
-  margin-bottom: 6px;
+  color: #000;
+  font-size: 1em;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
 }
+
 .review-comment {
-  font-size: 0.98em;
-  color: #444;
-  margin-top: 4px;
+  font-size: 0.95em;
+  color: #555;
+  line-height: 1.6;
+  text-align: left;
 }

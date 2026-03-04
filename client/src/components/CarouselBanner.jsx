@@ -4,21 +4,15 @@ import "./CarouselBanner.css";
 const slides = [
   {
     title: "Premium Fashion",
-    subtitle: "Dress to impress with our latest collection",
-    buttonText: "Explore Now",
-    bgColor: "#1a1f36"
+    subtitle: "Dress to impress with our latest collection"
   },
   {
     title: "Trendy Styles",
-    subtitle: "Discover the newest trends in fashion",
-    buttonText: "Shop Now",
-    bgColor: "#2c1810"
+    subtitle: "Discover the newest trends in fashion"
   },
   {
     title: "Quality Wear",
-    subtitle: "Premium quality at affordable prices",
-    buttonText: "View Collection",
-    bgColor: "#0d2137"
+    subtitle: "Premium quality at affordable prices"
   }
 ];
 
@@ -30,13 +24,13 @@ const CarouselBanner = () => {
   const currentSlide = slides[index];
   
   return (
-    <div className="carousel-banner" style={{ background: currentSlide.bgColor }}>
+    <div className="carousel-banner">
       <button className="carousel-arrow left" onClick={prev}>‹</button>
       
       <div className="carousel-content">
         <h2 className="carousel-title">{currentSlide.title}</h2>
         <p className="carousel-subtitle">{currentSlide.subtitle}</p>
-        <button className="carousel-btn">{currentSlide.buttonText}</button>
+        <button className="carousel-btn">Shop Now</button>
       </div>
       
       <button className="carousel-arrow right" onClick={next}>›</button>
