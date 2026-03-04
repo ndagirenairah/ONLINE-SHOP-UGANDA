@@ -1,22 +1,48 @@
+.tabs-filter-wrapper {
+  background: #1a1f36;
+  padding: 0;
+  margin-bottom: 0;
+}
+
 .tabs-filter {
   display: flex;
-  gap: 10px;
+  gap: 0;
   overflow-x: auto;
-  padding: 12px 0 12px 0;
-  background: #fff;
-  border-radius: 8px;
-  margin-bottom: 12px;
+  padding: 0;
+  background: #1a1f36;
+  border-radius: 0;
+  margin-bottom: 0;
 }
+
+.tabs-filter::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs-filter::-webkit-scrollbar-thumb {
+  background: #3a4060;
+  border-radius: 2px;
+}
+
 .tab {
-  background: #f3f3f3;
+  background: transparent;
   border: none;
-  border-radius: 4px;
-  padding: 8px 18px;
-  font-size: 1em;
-  color: #222;
+  border-radius: 0;
+  padding: 14px 24px;
+  font-size: 0.95em;
+  color: #ccc;
   cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  border-bottom: 2px solid transparent;
 }
-.tab.active, .tab:hover {
-  background: #ffa600;
+
+.tab:hover {
   color: #fff;
+  background: #252b45;
+}
+
+.tab.active {
+  color: #fff;
+  background: transparent;
+  border-bottom: 2px solid #f5b342;
 }

@@ -2,35 +2,117 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
-  border-radius: 8px;
-  margin: 24px 0 12px 0;
+  background: #1a1f36;
+  border-radius: 0;
+  margin: 0;
   position: relative;
-  min-height: 220px;
+  min-height: 320px;
+  padding: 40px 60px;
 }
-.carousel-img {
-  width: 900px;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 8px;
+
+.carousel-content {
+  text-align: center;
+  color: #fff;
+  z-index: 1;
 }
+
+.carousel-title {
+  font-size: 2.8em;
+  font-weight: 300;
+  margin: 0 0 16px 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.carousel-subtitle {
+  font-size: 1.1em;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 24px 0;
+}
+
+.carousel-btn {
+  background: #d35400;
+  color: #fff;
+  border: none;
+  padding: 14px 32px;
+  font-size: 1em;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.carousel-btn:hover {
+  background: #e65c00;
+}
+
 .carousel-arrow {
-  background: #ff0000;
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 1.5em;
+  width: 45px;
+  height: 45px;
+  font-size: 1.8em;
   cursor: pointer;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.carousel-arrow:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .carousel-arrow.left {
-  left: 10px;
+  left: 20px;
 }
+
 .carousel-arrow.right {
-  right: 10px;
+  right: 20px;
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dot.active {
+  background: #d35400;
+}
+
+.dot:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 768px) {
+  .carousel-banner {
+    min-height: 220px;
+    padding: 30px 40px;
+  }
+  
+  .carousel-title {
+    font-size: 1.8em;
+  }
+  
+  .carousel-subtitle {
+    font-size: 0.95em;
+  }
 }

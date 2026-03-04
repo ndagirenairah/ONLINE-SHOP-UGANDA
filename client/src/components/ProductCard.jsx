@@ -2,26 +2,68 @@ import React from "react";
 import "./ProductCard.css";
 
 const ProductCard = ({ product }) => {
+  const getBadgeClass = (condition) => {
+    switch(condition?.toLowerCase()) {
+      case 'brand new': return 'badge-new';
+      case 'uk used': return 'badge-uk';
+      case 'premium': return 'badge-premium';
+      default: return 'badge-default';
+    }
+  };
+
   return (
     <div className="product-card">
-      {product.badge && (
-        <div className={`badge badge-${product.badgeType || "default"}`}>{product.badge}</div>
+      {/* Badge */}
+      {product.condition && (
+        <div className={`product-badge ${getBadgeClass(product.condition)}`}>
+          {product.condition}
+        </div>
       )}
-      <div className="views">{product.views} views</div>
-      <img src={product.image} alt={product.title} className="product-image" />
-      <div className="product-title">{product.title}</div>
-      <div className="product-price">
-        UGX {product.price.toLocaleString()}
-        {product.oldPrice && (
-          <span className="old-price">UGX {product.oldPrice.toLocaleString()}</span>
-        )}
-        {product.discount && (
-          <span className="discount">-{product.discount}%</span>
-        )}
+      
+      {/* Views */}
+      <div className="product-views">
+        <span className="views-icon">📊</span> {product.views || 0} views
       </div>
-      <div className="product-stars">{'★'.repeat(product.stars)}{'☆'.repeat(5 - product.stars)}</div>
-      <div className="product-guarantee">{product.guarantee}</div>
-      <button className="add-to-cart">ADD TO CART</button>
+      
+      {/* Image */}
+      <div className="product-image-container">
+        <img src={product.image} alt={product.title} className="product-image" />
+      </div>
+      
+      {/* Free Delivery Tag */}
+      {product.freeDelivery && (
+        <div className="free-delivery-tag">• Eligible Free Delivery</div>
+      )}
+      
+      {/* Title */}
+      <h3 className="product-title">{product.title}</h3>
+      
+      {/* Rating */}
+      <div className="product-rating">
+        <span className="stars">{'★'.repeat(product.stars || 5)}{'☆'.repeat(5 - (product.stars || 5))}</span>
+        <span className="review-count">({product.reviews || 5})</span>
+      </div>
+      
+      {/* Price */}
+      <div className="product-price-row">
+        <span className="uganda-flag">🇺🇬</span>
+        <span className="currency">UGX</span>
+        <span className="price">{(product.price || 0).toLocaleString()}</span>
+      </div>
+      
+      {/* Guarantee */}
+      <div className="product-guarantee">
+        {product.guarantee || "Quality guaranteed on all products"}
+      </div>
+      
+      {/* Actions */}
+      <div className="product-actions">
+        <button className="btn-add-cart">Add to Cart</button>
+        <button className="btn-call">
+          <span className="call-icon">📞</span>
+          CALL
+        </button>
+      </div>
     </div>
   );
 };
