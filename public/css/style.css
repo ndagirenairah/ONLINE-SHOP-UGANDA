@@ -5,46 +5,46 @@
 
 /* CSS Variables */
 :root {
-    /* Primary Colors - Orange & White Theme */
-    --primary: #ff6b35;
-    --primary-dark: #e55a2b;
-    --primary-light: #ff8c5a;
-    --primary-lighter: #fff5f0;
+    /* Primary Colors - Black & White Theme */
+    --primary: #000000;
+    --primary-dark: #000000;
+    --primary-light: #333333;
+    --primary-lighter: #f5f5f5;
     
-    /* All colors simplified to Orange & White */
-    --secondary: #ff6b35;
-    --secondary-light: #ff8c5a;
+    /* All colors simplified to Black & White */
+    --secondary: #000000;
+    --secondary-light: #333333;
     
-    /* Accent Colors - All Orange */
-    --accent: #ff6b35;
-    --accent-dark: #e55a2b;
-    --warning: #ff8c5a;
-    --danger: #e55a2b;
-    --success: #ff6b35;
+    /* Accent Colors - All Black */
+    --accent: #000000;
+    --accent-dark: #000000;
+    --warning: #333333;
+    --danger: #000000;
+    --success: #000000;
     
     /* Neutral Colors - White tones */
     --white: #ffffff;
-    --light: #fff9f7;
-    --light-gray: #fff5f0;
-    --gray: #ffe8e0;
-    --dark-gray: #cc5529;
-    --dark: #2d3436;
-    --black: #1a1a1a;
+    --light: #ffffff;
+    --light-gray: #f5f5f5;
+    --gray: #e0e0e0;
+    --dark-gray: #666666;
+    --dark: #000000;
+    --black: #000000;
     
     /* WhatsApp - keep for branding */
     --whatsapp: #25D366;
     
-    /* Shadows - orange tinted */
-    --shadow-sm: 0 2px 4px rgba(255,107,53,0.08);
-    --shadow-md: 0 4px 12px rgba(255,107,53,0.12);
-    --shadow-lg: 0 8px 24px rgba(255,107,53,0.15);
-    --shadow-xl: 0 12px 48px rgba(255,107,53,0.18);
+    /* Shadows - neutral */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+    --shadow-xl: 0 12px 48px rgba(0,0,0,0.18);
     
     /* Border Radius */
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
+    --radius-sm: 0;
+    --radius-md: 0;
+    --radius-lg: 0;
+    --radius-xl: 0;
     --radius-full: 9999px;
     
     /* Transitions */
